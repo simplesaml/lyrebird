@@ -68,5 +68,11 @@ module Lyrebird
       expected = OpenSSL::Digest::SHA256.hexdigest(der)
       assert_equal expected, @certificate.fingerprint
     end
+
+    def test_base64
+      der = @certificate.certificate.to_der
+      expected = Base64.strict_encode64(der)
+      assert_equal expected, @certificate.base64
+    end
   end
 end

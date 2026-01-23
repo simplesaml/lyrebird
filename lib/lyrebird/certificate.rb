@@ -35,6 +35,10 @@ module Lyrebird
       OpenSSL::Digest::SHA256.hexdigest(@certificate.to_der)
     end
 
+    def base64
+      Base64.strict_encode64(@certificate.to_der)
+    end
+
     private
 
     def build_certificate
