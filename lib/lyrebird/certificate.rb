@@ -4,8 +4,8 @@ module Lyrebird
   class Certificate
     attr_reader :private_key
 
-    def self.generate
-      new(OpenSSL::PKey::RSA.new(2048))
+    def self.generate(bits: 2048)
+      new(OpenSSL::PKey::RSA.new(bits))
     end
 
     def initialize(private_key)
