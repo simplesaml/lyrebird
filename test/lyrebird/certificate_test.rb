@@ -74,5 +74,14 @@ module Lyrebird
       expected = Base64.strict_encode64(der)
       assert_equal expected, @certificate.base64
     end
+
+    def test_load
+      certificate = Certificate.load(
+        private_key_pem: @certificate.private_key_pem,
+        certificate_pem: @certificate.certificate_pem,
+      )
+
+      assert_equal @certificate.fingerprint, certificate.fingerprint
+    end
   end
 end

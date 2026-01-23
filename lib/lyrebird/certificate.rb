@@ -4,23 +4,30 @@ module Lyrebird
   class Certificate
     attr_reader :private_key, :certificate
 
-    def self.generate(
-      bits: 2048,
+    def self.generate(bits: 2048, **options)
+      new(OpenSSL::PKey::RSA.new(bits), **options)
+    end
+
+    def self.load(private_key_pem:, certificate_pem:)
+      private_key = OpenSSL::PKey::RSA.new(private_key_pem)
+      certificate = OpenSSL::X509::Certificate.new(certificate_pem)
+      new(private_key, certificate: certificate)
+    end
+
+    def initialize(
+      private_key,
       cn: nil,
       o: nil,
       valid_for: 365,
-      valid_until: nil
+      valid_until: nil,
+      certificate: nil
     )
-      not_after = valid_until || Time.now + (valid_for * 24 * 60 * 60)
-      new(OpenSSL::PKey::RSA.new(bits), cn, o, not_after)
-    end
-
-    def initialize(private_key, common_name, organization, not_after)
       @private_key = private_key
-      @common_name = common_name
-      @organization = organization
-      @not_after = not_after
-      @certificate = build_certificate
+      @common_name = cn
+      @organization = o
+      @valid_for = valid_for
+      @valid_until = valid_until
+      @certificate = certificate || build_certificate
     end
 
     def private_key_pem
@@ -47,7 +54,7 @@ module Lyrebird
         c.subject = build_subject
         c.issuer = c.subject
         c.not_before = Time.now
-        c.not_after = @not_after
+        c.not_after = @valid_until || Time.now + (@valid_for * 24 * 60 * 60)
         c.sign(@private_key, OpenSSL::Digest::SHA256.new)
       end
     end
