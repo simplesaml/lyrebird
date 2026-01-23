@@ -54,5 +54,9 @@ module Lyrebird
       certificate = Certificate.generate(valid_until: valid_until)
       assert_equal valid_until, certificate.certificate.not_after
     end
+
+    def test_private_key_pem
+      assert @certificate.private_key_pem.start_with?("-----BEGIN")
+    end
   end
 end

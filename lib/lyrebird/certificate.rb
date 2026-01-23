@@ -23,6 +23,10 @@ module Lyrebird
       @certificate = build_certificate
     end
 
+    def private_key_pem
+      @private_key.to_pem
+    end
+
     private
 
     def build_certificate
