@@ -31,6 +31,10 @@ module Lyrebird
       @certificate.to_pem
     end
 
+    def fingerprint
+      OpenSSL::Digest::SHA256.hexdigest(@certificate.to_der)
+    end
+
     private
 
     def build_certificate

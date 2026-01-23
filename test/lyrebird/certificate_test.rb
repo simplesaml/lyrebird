@@ -62,5 +62,11 @@ module Lyrebird
     def test_certificate_pem
       assert @certificate.certificate_pem.start_with?("-----BEGIN")
     end
+
+    def test_fingerprint
+      der = @certificate.certificate.to_der
+      expected = OpenSSL::Digest::SHA256.hexdigest(der)
+      assert_equal expected, @certificate.fingerprint
+    end
   end
 end
