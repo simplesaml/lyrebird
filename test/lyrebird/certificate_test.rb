@@ -39,5 +39,10 @@ module Lyrebird
       certificate = Certificate.generate
       assert certificate.certificate.verify(certificate.private_key)
     end
+
+    def test_certificate_with_custom_subject
+      certificate = Certificate.generate(cn: "Test", o: "Acme")
+      assert_equal "/CN=Test/O=Acme", certificate.certificate.subject.to_s
+    end
   end
 end
