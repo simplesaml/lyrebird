@@ -58,5 +58,9 @@ module Lyrebird
     def test_private_key_pem
       assert @certificate.private_key_pem.start_with?("-----BEGIN")
     end
+
+    def test_certificate_pem
+      assert @certificate.certificate_pem.start_with?("-----BEGIN")
+    end
   end
 end
