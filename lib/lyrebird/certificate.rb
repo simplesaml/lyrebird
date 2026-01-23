@@ -25,8 +25,7 @@ module Lyrebird
       @private_key = private_key
       @common_name = cn
       @organization = o
-      @valid_for = valid_for
-      @valid_until = valid_until
+      @not_after = valid_until || Time.now + (valid_for * 24 * 60 * 60)
       @certificate = certificate || build_certificate
     end
 
@@ -54,7 +53,7 @@ module Lyrebird
         c.subject = build_subject
         c.issuer = c.subject
         c.not_before = Time.now
-        c.not_after = @valid_until || Time.now + (@valid_for * 24 * 60 * 60)
+        c.not_after = @not_after
         c.sign(@private_key, OpenSSL::Digest::SHA256.new)
       end
     end
