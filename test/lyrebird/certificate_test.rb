@@ -42,5 +42,17 @@ module Lyrebird
       certificate = Certificate.generate(cn: "Test", o: "Acme")
       assert_equal "/CN=Test/O=Acme", certificate.certificate.subject.to_s
     end
+
+    def test_certificate_with_custom_valid_for
+      certificate = Certificate.generate(valid_for: 30).certificate
+      thirty_days = 30 * 24 * 60 * 60
+      assert_in_delta Time.now + thirty_days, certificate.not_after, 1
+    end
+
+    def test_certificate_with_valid_until
+      valid_until = Time.new(2030, 1, 1)
+      certificate = Certificate.generate(valid_until: valid_until)
+      assert_equal valid_until, certificate.certificate.not_after
+    end
   end
 end
