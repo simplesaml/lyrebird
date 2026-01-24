@@ -30,5 +30,18 @@ module Lyrebird
       instant = Time.iso8601(@root.attributes["IssueInstant"])
       assert_in_delta Time.now.to_i, instant.to_i, 1
     end
+
+    def test_issuer
+      issuer = @root.elements["saml:Issuer"]
+      assert_equal "Issuer", issuer.name
+      assert_equal "saml", issuer.prefix
+      assert_equal DEFAULTS.issuer, issuer.text
+    end
+
+    def test_issuer_override
+      assertion = Assertion.new(issuer: "https://test.example.com").mimic
+      issuer = assertion.root.elements["saml:Issuer"]
+      assert_equal "https://test.example.com", issuer.text
+    end
   end
 end

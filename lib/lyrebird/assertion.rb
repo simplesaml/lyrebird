@@ -2,9 +2,10 @@
 
 module Lyrebird
   class Assertion
-    def initialize
+    def initialize(issuer: DEFAULTS.issuer)
       @id = ID.generate
       @issue_instant = Time.now.utc
+      @issuer = issuer
     end
 
     def mimic
@@ -21,6 +22,7 @@ module Lyrebird
         r.add_attribute("ID", @id)
         r.add_attribute("Version", "2.0")
         r.add_attribute("IssueInstant", @issue_instant.iso8601)
+        r.add_element("saml:Issuer").text = @issuer
       end
     end
   end
