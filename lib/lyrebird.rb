@@ -3,8 +3,10 @@
 require "base64"
 require "openssl"
 require "rexml"
+require "securerandom"
 
 require_relative "lyrebird/certificate"
+require_relative "lyrebird/id"
 require_relative "lyrebird/namespaces"
 require_relative "lyrebird/version"
 
