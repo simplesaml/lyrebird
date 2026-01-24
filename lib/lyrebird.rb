@@ -2,6 +2,7 @@
 
 require "base64"
 require "openssl"
+require "rexml"
 
 require_relative "lyrebird/certificate"
 require_relative "lyrebird/version"
