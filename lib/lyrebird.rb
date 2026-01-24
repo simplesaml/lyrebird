@@ -8,6 +8,7 @@ require "time"
 
 require_relative "lyrebird/assertion"
 require_relative "lyrebird/certificate"
+require_relative "lyrebird/defaults"
 require_relative "lyrebird/id"
 require_relative "lyrebird/namespaces"
 require_relative "lyrebird/version"
