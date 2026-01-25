@@ -6,4 +6,5 @@ module Lyrebird
   XMLDSIG_NS = "http://www.w3.org/2000/09/xmldsig#"
   CM_BEARER = "urn:oasis:names:tc:SAML:2.0:cm:bearer"
   ATTR_NAME_FORMAT = "urn:oasis:names:tc:SAML:2.0:attrname-format:unspecified"
+  STATUS_SUCCESS = "urn:oasis:names:tc:SAML:2.0:status:Success"
 end

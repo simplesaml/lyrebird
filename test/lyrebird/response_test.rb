@@ -66,5 +66,18 @@ module Lyrebird
       issuer = response.root.elements["saml:Issuer"]
       assert_equal "https://custom.idp.example.com", issuer.text
     end
+
+    def test_status
+      status = @root.elements["samlp:Status"]
+      assert_equal "Status", status.name
+      assert_equal "samlp", status.prefix
+    end
+
+    def test_status_code
+      status_code = @root.elements["samlp:Status/samlp:StatusCode"]
+      assert_equal "StatusCode", status_code.name
+      assert_equal "samlp", status_code.prefix
+      assert_equal STATUS_SUCCESS, status_code.attributes["Value"]
+    end
   end
 end

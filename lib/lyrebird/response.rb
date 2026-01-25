@@ -43,6 +43,14 @@ module Lyrebird
         r.add_attribute("Destination", @destination)
         r.add_attribute("InResponseTo", @in_response_to)
         r.add_element("saml:Issuer").text = @issuer
+        r.add_element(status)
+      end
+    end
+
+    def status
+      REXML::Element.new("samlp:Status").tap do |s|
+        sc = s.add_element("samlp:StatusCode")
+        sc.add_attribute("Value", STATUS_SUCCESS)
       end
     end
   end
