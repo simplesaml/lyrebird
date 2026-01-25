@@ -52,6 +52,7 @@ module Lyrebird
         r.add_element(status)
         a = r.add_element(@assertion.document.root)
         Signature.new(a, certificate: @certificate).sign! if @sign_assertion
+        Signature.new(r, certificate: @certificate).sign! if @sign_response
       end
     end
 

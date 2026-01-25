@@ -134,5 +134,35 @@ module Lyrebird
       assert_equal "Signature", signature.name
       assert_equal "ds", signature.prefix
     end
+
+    def test_response_unsigned_by_default
+      assert_nil @root.elements["ds:Signature"]
+    end
+
+    def test_sign_response_adds_signature
+      args = { certificate: Certificate.generate, sign_response: true }
+      root = Response.new(**args).document.root
+      signature = root.elements["ds:Signature"]
+      assert_equal "Signature", signature.name
+      assert_equal "ds", signature.prefix
+    end
+
+    def test_sign_both_response_and_assertion
+      args = {
+        certificate: Certificate.generate,
+        sign_assertion: true,
+        sign_response: true
+      }
+
+      root = Response.new(**args).document.root
+      refute_nil root.elements["ds:Signature"]
+      refute_nil root.elements["saml:Assertion/ds:Signature"]
+    end
+
+    def test_sign_neither_response_nor_assertion
+      root = Response.new(certificate: Certificate.generate).document.root
+      assert_nil root.elements["ds:Signature"]
+      assert_nil root.elements["saml:Assertion/ds:Signature"]
+    end
   end
 end
