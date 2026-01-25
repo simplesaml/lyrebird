@@ -68,12 +68,36 @@ response.document # REXML::Document for inspection
 
 ### Signing
 ```ruby
-cert = Lyrebird::Certificate.generate
+idp_cert = Lyrebird::Certificate.generate
 
 response = Lyrebird::Response.new(
-  certificate: cert,
+  idp_certificate: idp_cert,
   sign_assertion: true, # Sign the assertion (default: false)
   sign_response: true   # Sign the response (default: false)
+)
+```
+
+### Encryption
+Encrypt assertions using the SP's certificate so only the SP can decrypt them:
+```ruby
+idp_cert = Lyrebird::Certificate.generate
+sp_cert = Lyrebird::Certificate.generate  # In practice, provided by the SP
+
+response = Lyrebird::Response.new(
+  idp_certificate: idp_cert,
+  sp_certificate: sp_cert,
+  encrypt_assertion: true # Encrypt the assertion (default: false)
+)
+```
+
+Signing and encryption can be combined. When both are enabled, the assertion is
+signed first, then encrypted (sign-then-encrypt):
+```ruby
+response = Lyrebird::Response.new(
+  idp_certificate: idp_cert,
+  sp_certificate: sp_cert,
+  sign_assertion: true,
+  encrypt_assertion: true
 )
 ```
 
