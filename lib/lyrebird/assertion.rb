@@ -36,6 +36,7 @@ module Lyrebird
         r.add_attribute("IssueInstant", @issue_instant.iso8601)
         r.add_element("saml:Issuer").text = @issuer
         r.add_element(subject)
+        r.add_element(conditions)
       end
     end
 
@@ -55,6 +56,13 @@ module Lyrebird
         data.add_attribute("NotOnOrAfter", @not_on_or_after.iso8601)
         data.add_attribute("Recipient", @recipient)
         data.add_attribute("InResponseTo", @in_response_to)
+      end
+    end
+
+    def conditions
+      REXML::Element.new("saml:Conditions").tap do |c|
+        c.add_attribute("NotBefore", @issue_instant.iso8601)
+        c.add_attribute("NotOnOrAfter", @not_on_or_after.iso8601)
       end
     end
   end

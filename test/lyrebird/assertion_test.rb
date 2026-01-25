@@ -10,6 +10,7 @@ module Lyrebird
       @subject = @root.elements["saml:Subject"]
       @sc = @subject.elements["saml:SubjectConfirmation"]
       @scd = @sc.elements["saml:SubjectConfirmationData"]
+      @conditions = @root.elements["saml:Conditions"]
     end
 
     def test_root_name
@@ -136,6 +137,32 @@ module Lyrebird
       sc = subject.elements["saml:SubjectConfirmation"]
       scd = sc.elements["saml:SubjectConfirmationData"]
       not_on_or_after = Time.iso8601(scd.attributes["NotOnOrAfter"])
+      expected = Time.now.utc + valid_for
+      assert_in_delta expected.to_i, not_on_or_after.to_i, 1
+    end
+
+    def test_conditions
+      assert_equal "Conditions", @conditions.name
+      assert_equal "saml", @conditions.prefix
+    end
+
+    def test_conditions_not_before
+      not_before = Time.iso8601(@conditions.attributes["NotBefore"])
+      assert_in_delta Time.now.to_i, not_before.to_i, 1
+    end
+
+    def test_conditions_not_on_or_after
+      not_on_or_after = Time.iso8601(@conditions.attributes["NotOnOrAfter"])
+      expected = Time.now.utc + DEFAULTS.valid_for
+      assert_in_delta expected.to_i, not_on_or_after.to_i, 1
+    end
+
+    def test_conditions_valid_for_override
+      valid_for = 600 # 10 minutes
+      refute_equal valid_for, DEFAULTS.valid_for
+      assertion = Assertion.new(valid_for: valid_for).mimic
+      conditions = assertion.root.elements["saml:Conditions"]
+      not_on_or_after = Time.iso8601(conditions.attributes["NotOnOrAfter"])
       expected = Time.now.utc + valid_for
       assert_in_delta expected.to_i, not_on_or_after.to_i, 1
     end
