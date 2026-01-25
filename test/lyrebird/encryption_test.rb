@@ -19,5 +19,32 @@ module Lyrebird
     def test_encrypted_assertion_namespace
       assert_equal SAML_ASSERTION_NS, @encrypted.namespace
     end
+
+    def test_encrypted_data_element
+      ed = @encrypted.elements["xenc:EncryptedData"]
+      assert_equal "EncryptedData", ed.name
+      assert_equal "xenc", ed.prefix
+    end
+
+    def test_encrypted_data_namespace
+      ed = @encrypted.elements["xenc:EncryptedData"]
+      assert_equal XMLENC_NS, ed.namespace
+    end
+
+    def test_encrypted_data_type
+      ed = @encrypted.elements["xenc:EncryptedData"]
+      assert_equal "#{XMLENC_NS}Element", ed.attributes["Type"]
+    end
+
+    def test_encryption_method_element
+      em = @encrypted.elements["xenc:EncryptedData/xenc:EncryptionMethod"]
+      assert_equal "EncryptionMethod", em.name
+      assert_equal "xenc", em.prefix
+    end
+
+    def test_encryption_method_algorithm
+      em = @encrypted.elements["xenc:EncryptedData/xenc:EncryptionMethod"]
+      assert_equal AES256_CBC, em.attributes["Algorithm"]
+    end
   end
 end

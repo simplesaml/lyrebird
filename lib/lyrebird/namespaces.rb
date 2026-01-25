@@ -11,4 +11,6 @@ module Lyrebird
   CM_BEARER = "urn:oasis:names:tc:SAML:2.0:cm:bearer"
   ATTR_NAME_FORMAT = "urn:oasis:names:tc:SAML:2.0:attrname-format:unspecified"
   STATUS_SUCCESS = "urn:oasis:names:tc:SAML:2.0:status:Success"
+  XMLENC_NS = "http://www.w3.org/2001/04/xmlenc#"
+  AES256_CBC = "http://www.w3.org/2001/04/xmlenc#aes256-cbc"
 end
