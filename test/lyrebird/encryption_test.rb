@@ -10,6 +10,8 @@ module Lyrebird
       @certificate = Certificate.generate
       @encrypted = Encryption.new(@element, @certificate).encrypt!
       @ed = @encrypted.elements["xenc:EncryptedData"]
+      @ki = @ed.elements["ds:KeyInfo"]
+      @ek = @ki.elements["xenc:EncryptedKey"]
       @cd = @ed.elements["xenc:CipherData"]
     end
 
@@ -68,6 +70,57 @@ module Lyrebird
       decoded = Base64.strict_decode64(cv.text)
       iv = decoded[0, 16]
       assert_equal 16, iv.bytesize
+    end
+
+    def test_key_info_element
+      assert_equal "KeyInfo", @ki.name
+      assert_equal "ds", @ki.prefix
+    end
+
+    def test_key_info_namespace
+      assert_equal XMLDSIG_NS, @ki.namespace
+    end
+
+    def test_encrypted_key_element
+      assert_equal "EncryptedKey", @ek.name
+      assert_equal "xenc", @ek.prefix
+    end
+
+    def test_encrypted_key_namespace
+      assert_equal XMLENC_NS, @ek.namespace
+    end
+
+    def test_encrypted_key_encryption_method
+      em = @ek.elements["xenc:EncryptionMethod"]
+      assert_equal "EncryptionMethod", em.name
+      assert_equal RSA_OAEP, em.attributes["Algorithm"]
+    end
+
+    def test_encrypted_key_cipher_data
+      cd = @ek.elements["xenc:CipherData"]
+      assert_equal "CipherData", cd.name
+      assert_equal "xenc", cd.prefix
+    end
+
+    def test_encrypted_key_cipher_value
+      cv = @ek.elements["xenc:CipherData/xenc:CipherValue"]
+      assert_equal "CipherValue", cv.name
+      assert_equal "xenc", cv.prefix
+    end
+
+    def test_encrypted_key_cipher_value_is_base64
+      cv = @ek.elements["xenc:CipherData/xenc:CipherValue"]
+      decoded = Base64.strict_decode64(cv.text)
+      assert decoded.bytesize > 0
+    end
+
+    def test_encrypted_key_can_be_decrypted
+      cv = @ek.elements["xenc:CipherData/xenc:CipherValue"]
+      encrypted_key = Base64.strict_decode64(cv.text)
+      private_key = @certificate.private_key
+      padding = OpenSSL::PKey::RSA::PKCS1_OAEP_PADDING
+      decrypted_key = private_key.private_decrypt(encrypted_key, padding)
+      assert_equal 32, decrypted_key.bytesize
     end
   end
 end

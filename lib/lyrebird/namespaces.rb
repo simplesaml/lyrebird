@@ -13,4 +13,5 @@ module Lyrebird
   STATUS_SUCCESS = "urn:oasis:names:tc:SAML:2.0:status:Success"
   XMLENC_NS = "http://www.w3.org/2001/04/xmlenc#"
   AES256_CBC = "http://www.w3.org/2001/04/xmlenc#aes256-cbc"
+  RSA_OAEP = "http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p"
 end
