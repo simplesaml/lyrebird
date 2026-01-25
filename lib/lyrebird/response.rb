@@ -26,6 +26,10 @@ module Lyrebird
     end
 
     def mimic
+      Base64.strict_encode64(document.to_s)
+    end
+
+    def document
       REXML::Document.new.tap do |d|
         d.add_element(root)
       end
@@ -44,7 +48,7 @@ module Lyrebird
         r.add_attribute("InResponseTo", @in_response_to)
         r.add_element("saml:Issuer").text = @issuer
         r.add_element(status)
-        r.add_element(@assertion.mimic.root)
+        r.add_element(@assertion.document.root)
       end
     end
 

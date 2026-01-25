@@ -27,7 +27,7 @@ module Lyrebird
       @attributes = attributes
     end
 
-    def mimic
+    def document
       REXML::Document.new.tap do |d|
         d.add_element(root)
       end

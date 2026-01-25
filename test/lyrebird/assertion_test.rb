@@ -5,7 +5,7 @@ require "test_helper"
 module Lyrebird
   class AssertionTest < Minitest::Test
     def setup
-      @assertion = Assertion.new.mimic
+      @assertion = Assertion.new.document
       @root = @assertion.root
       @subject = @root.elements["saml:Subject"]
       @sc = @subject.elements["saml:SubjectConfirmation"]
@@ -45,7 +45,7 @@ module Lyrebird
     end
 
     def test_issuer_override
-      assertion = Assertion.new(issuer: "https://test.example.com").mimic
+      assertion = Assertion.new(issuer: "https://test.example.com").document
       issuer = assertion.root.elements["saml:Issuer"]
       assert_equal "https://test.example.com", issuer.text
     end
@@ -70,7 +70,7 @@ module Lyrebird
     def test_name_id_override
       email = "user@test.com"
       refute_equal email, DEFAULTS.name_id
-      assertion = Assertion.new(name_id: email).mimic
+      assertion = Assertion.new(name_id: email).document
       name_id = assertion.root.elements["saml:Subject/saml:NameID"]
       assert_equal email, name_id.text
     end
@@ -78,7 +78,7 @@ module Lyrebird
     def test_name_id_format_override
       format = NAMEID_PERSISTENT
       refute_equal format, DEFAULTS.name_id_format
-      assertion = Assertion.new(name_id_format: format).mimic
+      assertion = Assertion.new(name_id_format: format).document
       name_id = assertion.root.elements["saml:Subject/saml:NameID"]
       assert_equal format, name_id.attributes["Format"]
     end
@@ -114,7 +114,7 @@ module Lyrebird
     def test_recipient_override
       recipient = "https://custom.example.com/acs"
       refute_equal recipient, DEFAULTS.recipient
-      assertion = Assertion.new(recipient: recipient).mimic
+      assertion = Assertion.new(recipient: recipient).document
       subject = assertion.root.elements["saml:Subject"]
       sc = subject.elements["saml:SubjectConfirmation"]
       scd = sc.elements["saml:SubjectConfirmationData"]
@@ -124,7 +124,7 @@ module Lyrebird
     def test_in_response_to_override
       in_response_to = "_custom_request"
       refute_equal in_response_to, DEFAULTS.in_response_to
-      assertion = Assertion.new(in_response_to: in_response_to).mimic
+      assertion = Assertion.new(in_response_to: in_response_to).document
       subject = assertion.root.elements["saml:Subject"]
       sc = subject.elements["saml:SubjectConfirmation"]
       scd = sc.elements["saml:SubjectConfirmationData"]
@@ -134,7 +134,7 @@ module Lyrebird
     def test_valid_for_override
       valid_for = 600 # 10 minutes
       refute_equal valid_for, DEFAULTS.valid_for
-      assertion = Assertion.new(valid_for: valid_for).mimic
+      assertion = Assertion.new(valid_for: valid_for).document
       subject = assertion.root.elements["saml:Subject"]
       sc = subject.elements["saml:SubjectConfirmation"]
       scd = sc.elements["saml:SubjectConfirmationData"]
@@ -162,7 +162,7 @@ module Lyrebird
     def test_conditions_valid_for_override
       valid_for = 600 # 10 minutes
       refute_equal valid_for, DEFAULTS.valid_for
-      assertion = Assertion.new(valid_for: valid_for).mimic
+      assertion = Assertion.new(valid_for: valid_for).document
       conditions = assertion.root.elements["saml:Conditions"]
       not_on_or_after = Time.iso8601(conditions.attributes["NotOnOrAfter"])
       expected = Time.now.utc + valid_for
@@ -184,7 +184,7 @@ module Lyrebird
     def test_audience_override
       audience = "https://custom.sp.example.com"
       refute_equal audience, DEFAULTS.audience
-      assertion = Assertion.new(audience: audience).mimic
+      assertion = Assertion.new(audience: audience).document
       conditions = assertion.root.elements["saml:Conditions"]
       ar = conditions.elements["saml:AudienceRestriction"]
       assert_equal audience, ar.elements["saml:Audience"].text
@@ -221,7 +221,7 @@ module Lyrebird
     def test_authn_context_override
       custom_ref = "urn:oasis:names:tc:SAML:2.0:ac:classes:Password"
       refute_equal custom_ref, DEFAULTS.authn_context
-      assertion = Assertion.new(authn_context: custom_ref).mimic
+      assertion = Assertion.new(authn_context: custom_ref).document
       as = assertion.root.elements["saml:AuthnStatement"]
       ac = as.elements["saml:AuthnContext"]
       class_ref = ac.elements["saml:AuthnContextClassRef"]
@@ -241,13 +241,13 @@ module Lyrebird
     end
 
     def test_no_attribute_statement_when_empty
-      assertion = Assertion.new(attributes: {}).mimic
+      assertion = Assertion.new(attributes: {}).document
       assert_nil assertion.root.elements["saml:AttributeStatement"]
     end
 
     def test_attribute_statement_with_single_value
       attributes = { "email" => "user@example.com" }
-      assertion = Assertion.new(attributes: attributes).mimic
+      assertion = Assertion.new(attributes: attributes).document
       as = assertion.root.elements["saml:AttributeStatement"]
       assert_equal "AttributeStatement", as.name
       assert_equal "saml", as.prefix
@@ -255,7 +255,7 @@ module Lyrebird
 
     def test_attribute_name_and_format
       attributes = { "email" => "user@example.com" }
-      assertion = Assertion.new(attributes: attributes).mimic
+      assertion = Assertion.new(attributes: attributes).document
       attr = assertion.root.elements["saml:AttributeStatement/saml:Attribute"]
       assert_equal "Attribute", attr.name
       assert_equal "saml", attr.prefix
@@ -265,7 +265,7 @@ module Lyrebird
 
     def test_attribute_single_value
       attributes = { "email" => "user@example.com" }
-      assertion = Assertion.new(attributes: attributes).mimic
+      assertion = Assertion.new(attributes: attributes).document
       attr = assertion.root.elements["saml:AttributeStatement/saml:Attribute"]
       value = attr.elements["saml:AttributeValue"]
       assert_equal "AttributeValue", value.name
@@ -275,7 +275,7 @@ module Lyrebird
 
     def test_attribute_multi_value
       attributes = { "groups" => ["admin", "users", "developers"] }
-      assertion = Assertion.new(attributes: attributes).mimic
+      assertion = Assertion.new(attributes: attributes).document
       attr = assertion.root.elements["saml:AttributeStatement/saml:Attribute"]
       values = attr.elements.to_a("saml:AttributeValue")
       assert_equal 3, values.size
@@ -291,7 +291,7 @@ module Lyrebird
         "groups" => ["admin", "users"]
       }
 
-      assertion = Assertion.new(attributes: attributes).mimic
+      assertion = Assertion.new(attributes: attributes).document
       as = assertion.root.elements["saml:AttributeStatement"]
       attrs = as.elements.to_a("saml:Attribute")
       assert_equal 3, attrs.size
