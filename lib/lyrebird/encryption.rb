@@ -5,6 +5,7 @@ module Lyrebird
     def initialize(element, certificate)
       @element = element
       @certificate = certificate
+      @aes_key = SecureRandom.random_bytes(32)
     end
 
     def encrypt!
@@ -26,6 +27,20 @@ module Lyrebird
         ed.add_attribute("Type", "#{XMLENC_NS}Element")
         em = ed.add_element("xenc:EncryptionMethod")
         em.add_attribute("Algorithm", AES256_CBC)
+        ed.add_element(cipher_data)
+      end
+    end
+
+    def cipher_data
+      cipher = OpenSSL::Cipher.new("AES-256-CBC")
+      cipher.encrypt
+      cipher.key = @aes_key
+      iv = cipher.random_iv
+      ciphertext = cipher.update(@element.to_s) + cipher.final
+
+      REXML::Element.new("xenc:CipherData").tap do |cd|
+        cv = Base64.strict_encode64(iv + ciphertext)
+        cd.add_element("xenc:CipherValue").text = cv
       end
     end
   end
