@@ -21,9 +21,9 @@ class SAMLTest < ActionDispatch::IntegrationTest
       audience: root_url,
       name_id: user.email,
       attributes: {
-        "email" => user.email,
-        "first_name" => user.first_name,
-        "last_name" => user.last_name
+        email: user.email,
+        first_name: user.first_name,
+        last_name: user.last_name
       }
     )
 
@@ -54,8 +54,8 @@ response = Lyrebird::Response.new(
   audience: "https://sp.example.com",
   valid_for: 300, # seconds
   attributes: {
-    "email" => "user@example.com",
-    "groups" => ["admin", "users"]
+    email: "user@example.com",
+    groups: ["admin", "users"]
   }
 )
 ```
@@ -83,7 +83,7 @@ Lyrebird::DEFAULTS.recipient = "https://custom.example.com/acs"
 Lyrebird::DEFAULTS.audience = "https://custom.example.com"
 Lyrebird::DEFAULTS.name_id = "default@example.com"
 Lyrebird::DEFAULTS.valid_for = 600 # 10 minutes
-Lyrebird::DEFAULTS.attributes = { "role" => "user" }
+Lyrebird::DEFAULTS.attributes = { role: "user" }
 ```
 
 ## Certificate

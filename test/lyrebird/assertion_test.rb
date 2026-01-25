@@ -286,9 +286,9 @@ module Lyrebird
 
     def test_multiple_attributes
       attributes = {
-        "email" => "user@example.com",
-        "name" => "Test User",
-        "groups" => ["admin", "users"]
+        email: "user@example.com",
+        name: "Test User",
+        groups: ["admin", "users"]
       }
 
       assertion = Assertion.new(attributes: attributes).document

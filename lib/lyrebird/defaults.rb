@@ -31,8 +31,8 @@ module Lyrebird
         "PasswordProtectedTransport"
 
       @attributes = {
-        "first_name" => "Test",
-        "last_name" => "User",
+        first_name: "Test",
+        last_name: "User",
       }
     end
   end
