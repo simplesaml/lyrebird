@@ -6,7 +6,7 @@ module Lyrebird
       issuer: DEFAULTS.issuer,
       destination: DEFAULTS.recipient,
       in_response_to: DEFAULTS.in_response_to,
-      certificate: nil,
+      idp_certificate: nil,
       sign_assertion: false,
       sign_response: false,
       encrypt_assertion: false,
@@ -18,7 +18,7 @@ module Lyrebird
       @issuer = issuer
       @destination = destination
       @in_response_to = in_response_to
-      @certificate = certificate
+      @idp_certificate = idp_certificate
       @sign_assertion = sign_assertion
       @sign_response = sign_response
       @encrypt_assertion = encrypt_assertion
@@ -55,13 +55,13 @@ module Lyrebird
         r.add_element("saml:Issuer").text = @issuer
         r.add_element(status)
         r.add_element(assertion_element)
-        Signature.new(r, certificate: @certificate).sign! if @sign_response
+        Signature.new(r, certificate: @idp_certificate).sign! if @sign_response
       end
     end
 
     def assertion_element
       element = @assertion.document.root
-      Signature.new(element, certificate: @certificate).sign! if @sign_assertion
+      Signature.new(element, certificate: @idp_certificate).sign! if @sign_assertion
       return element unless @encrypt_assertion
       Encryption.new(element, @sp_certificate).encrypt!
     end

@@ -128,7 +128,7 @@ module Lyrebird
 
     def test_sign_assertion_adds_signature
       cert = Certificate.generate
-      root = Response.new(certificate: cert, sign_assertion: true).document.root
+      root = Response.new(idp_certificate: cert, sign_assertion: true).document.root
       assertion = root.elements["saml:Assertion"]
       signature = assertion.elements["ds:Signature"]
       assert_equal "Signature", signature.name
@@ -140,7 +140,7 @@ module Lyrebird
     end
 
     def test_sign_response_adds_signature
-      args = { certificate: Certificate.generate, sign_response: true }
+      args = { idp_certificate: Certificate.generate, sign_response: true }
       root = Response.new(**args).document.root
       signature = root.elements["ds:Signature"]
       assert_equal "Signature", signature.name
@@ -149,7 +149,7 @@ module Lyrebird
 
     def test_sign_both_response_and_assertion
       args = {
-        certificate: Certificate.generate,
+        idp_certificate: Certificate.generate,
         sign_assertion: true,
         sign_response: true
       }
@@ -160,7 +160,7 @@ module Lyrebird
     end
 
     def test_sign_neither_response_nor_assertion
-      root = Response.new(certificate: Certificate.generate).document.root
+      root = Response.new(idp_certificate: Certificate.generate).document.root
       assert_nil root.elements["ds:Signature"]
       assert_nil root.elements["saml:Assertion/ds:Signature"]
     end
