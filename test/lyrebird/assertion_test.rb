@@ -11,6 +11,7 @@ module Lyrebird
       @sc = @subject.elements["saml:SubjectConfirmation"]
       @scd = @sc.elements["saml:SubjectConfirmationData"]
       @conditions = @root.elements["saml:Conditions"]
+      @audience_restriction = @conditions.elements["saml:AudienceRestriction"]
     end
 
     def test_root_name
@@ -165,6 +166,27 @@ module Lyrebird
       not_on_or_after = Time.iso8601(conditions.attributes["NotOnOrAfter"])
       expected = Time.now.utc + valid_for
       assert_in_delta expected.to_i, not_on_or_after.to_i, 1
+    end
+
+    def test_audience_restriction
+      assert_equal "AudienceRestriction", @audience_restriction.name
+      assert_equal "saml", @audience_restriction.prefix
+    end
+
+    def test_audience
+      audience = @audience_restriction.elements["saml:Audience"]
+      assert_equal "Audience", audience.name
+      assert_equal "saml", audience.prefix
+      assert_equal DEFAULTS.audience, audience.text
+    end
+
+    def test_audience_override
+      audience = "https://custom.sp.example.com"
+      refute_equal audience, DEFAULTS.audience
+      assertion = Assertion.new(audience: audience).mimic
+      conditions = assertion.root.elements["saml:Conditions"]
+      ar = conditions.elements["saml:AudienceRestriction"]
+      assert_equal audience, ar.elements["saml:Audience"].text
     end
   end
 end

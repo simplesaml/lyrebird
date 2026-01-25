@@ -8,7 +8,8 @@ module Lyrebird
       name_id_format: DEFAULTS.name_id_format,
       recipient: DEFAULTS.recipient,
       in_response_to: DEFAULTS.in_response_to,
-      valid_for: DEFAULTS.valid_for
+      valid_for: DEFAULTS.valid_for,
+      audience: DEFAULTS.audience
     )
       @id = ID.generate
       @issue_instant = Time.now.utc
@@ -18,6 +19,7 @@ module Lyrebird
       @recipient = recipient
       @in_response_to = in_response_to
       @not_on_or_after = @issue_instant + valid_for
+      @audience = audience
     end
 
     def mimic
@@ -63,6 +65,8 @@ module Lyrebird
       REXML::Element.new("saml:Conditions").tap do |c|
         c.add_attribute("NotBefore", @issue_instant.iso8601)
         c.add_attribute("NotOnOrAfter", @not_on_or_after.iso8601)
+        ar = c.add_element("saml:AudienceRestriction")
+        ar.add_element("saml:Audience").text = @audience
       end
     end
   end

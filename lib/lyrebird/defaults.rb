@@ -13,6 +13,7 @@ module Lyrebird
     attr_accessor :recipient
     attr_accessor :in_response_to
     attr_accessor :valid_for
+    attr_accessor :audience
 
     def initialize
       @issuer = "https://idp.example.com"
@@ -21,6 +22,7 @@ module Lyrebird
       @recipient = "https://sp.example.com/acs"
       @in_response_to = "_request_id"
       @valid_for = 300 # 5 minutes
+      @audience = "https://sp.example.com"
     end
   end
 
