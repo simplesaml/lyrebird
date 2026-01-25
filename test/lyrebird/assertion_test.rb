@@ -7,6 +7,9 @@ module Lyrebird
     def setup
       @assertion = Assertion.new.mimic
       @root = @assertion.root
+      @subject = @root.elements["saml:Subject"]
+      @sc = @subject.elements["saml:SubjectConfirmation"]
+      @scd = @sc.elements["saml:SubjectConfirmationData"]
     end
 
     def test_root_name
@@ -45,20 +48,19 @@ module Lyrebird
     end
 
     def test_subject
-      subject = @root.elements["saml:Subject"]
-      assert_equal "Subject", subject.name
-      assert_equal "saml", subject.prefix
+      assert_equal "Subject", @subject.name
+      assert_equal "saml", @subject.prefix
     end
 
     def test_name_id
-      name_id = @root.elements["saml:Subject/saml:NameID"]
+      name_id = @subject.elements["saml:NameID"]
       assert_equal "NameID", name_id.name
       assert_equal "saml", name_id.prefix
       assert_equal DEFAULTS.name_id, name_id.text
     end
 
     def test_name_id_format_default
-      name_id = @root.elements["saml:Subject/saml:NameID"]
+      name_id = @subject.elements["saml:NameID"]
       assert_equal NAMEID_EMAIL, name_id.attributes["Format"]
     end
 
@@ -76,6 +78,66 @@ module Lyrebird
       assertion = Assertion.new(name_id_format: format).mimic
       name_id = assertion.root.elements["saml:Subject/saml:NameID"]
       assert_equal format, name_id.attributes["Format"]
+    end
+
+    def test_subject_confirmation
+      assert_equal "SubjectConfirmation", @sc.name
+      assert_equal "saml", @sc.prefix
+    end
+
+    def test_subject_confirmation_method
+      assert_equal CM_BEARER, @sc.attributes["Method"]
+    end
+
+    def test_subject_confirmation_data
+      assert_equal "SubjectConfirmationData", @scd.name
+      assert_equal "saml", @scd.prefix
+    end
+
+    def test_valid_for_default
+      not_on_or_after = Time.iso8601(@scd.attributes["NotOnOrAfter"])
+      expected = Time.now.utc + DEFAULTS.valid_for
+      assert_in_delta expected.to_i, not_on_or_after.to_i, 1
+    end
+
+    def test_recipient_default
+      assert_equal DEFAULTS.recipient, @scd.attributes["Recipient"]
+    end
+
+    def test_in_response_to_default
+      assert_equal DEFAULTS.in_response_to, @scd.attributes["InResponseTo"]
+    end
+
+    def test_recipient_override
+      recipient = "https://custom.example.com/acs"
+      refute_equal recipient, DEFAULTS.recipient
+      assertion = Assertion.new(recipient: recipient).mimic
+      subject = assertion.root.elements["saml:Subject"]
+      sc = subject.elements["saml:SubjectConfirmation"]
+      scd = sc.elements["saml:SubjectConfirmationData"]
+      assert_equal recipient, scd.attributes["Recipient"]
+    end
+
+    def test_in_response_to_override
+      in_response_to = "_custom_request"
+      refute_equal in_response_to, DEFAULTS.in_response_to
+      assertion = Assertion.new(in_response_to: in_response_to).mimic
+      subject = assertion.root.elements["saml:Subject"]
+      sc = subject.elements["saml:SubjectConfirmation"]
+      scd = sc.elements["saml:SubjectConfirmationData"]
+      assert_equal in_response_to, scd.attributes["InResponseTo"]
+    end
+
+    def test_valid_for_override
+      valid_for = 600 # 10 minutes
+      refute_equal valid_for, DEFAULTS.valid_for
+      assertion = Assertion.new(valid_for: valid_for).mimic
+      subject = assertion.root.elements["saml:Subject"]
+      sc = subject.elements["saml:SubjectConfirmation"]
+      scd = sc.elements["saml:SubjectConfirmationData"]
+      not_on_or_after = Time.iso8601(scd.attributes["NotOnOrAfter"])
+      expected = Time.now.utc + valid_for
+      assert_in_delta expected.to_i, not_on_or_after.to_i, 1
     end
   end
 end
