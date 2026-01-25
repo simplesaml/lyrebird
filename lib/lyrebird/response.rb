@@ -44,6 +44,7 @@ module Lyrebird
         r.add_attribute("InResponseTo", @in_response_to)
         r.add_element("saml:Issuer").text = @issuer
         r.add_element(status)
+        r.add_element(@assertion.mimic.root)
       end
     end
 

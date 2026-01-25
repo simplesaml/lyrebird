@@ -40,7 +40,8 @@ module Lyrebird
     end
 
     def test_destination_override
-      destination = "https://custom.example.com/acs"
+      destination = "https://test.example.com/acs"
+      refute_equal destination, DEFAULTS.recipient
       response = Response.new(destination: destination).mimic
       assert_equal destination, response.root.attributes["Destination"]
     end
@@ -50,8 +51,10 @@ module Lyrebird
     end
 
     def test_in_response_to_override
-      response = Response.new(in_response_to: "_custom_request").mimic
-      assert_equal "_custom_request", response.root.attributes["InResponseTo"]
+      in_response_to = "_test_request"
+      refute_equal in_response_to, DEFAULTS.in_response_to
+      response = Response.new(in_response_to: in_response_to).mimic
+      assert_equal in_response_to, response.root.attributes["InResponseTo"]
     end
 
     def test_issuer
@@ -62,9 +65,11 @@ module Lyrebird
     end
 
     def test_issuer_override
-      response = Response.new(issuer: "https://custom.idp.example.com").mimic
+      url = "https://test.idp.example.com"
+      refute_equal url, DEFAULTS.issuer
+      response = Response.new(issuer: url).mimic
       issuer = response.root.elements["saml:Issuer"]
-      assert_equal "https://custom.idp.example.com", issuer.text
+      assert_equal url, issuer.text
     end
 
     def test_status
@@ -78,6 +83,35 @@ module Lyrebird
       assert_equal "StatusCode", status_code.name
       assert_equal "samlp", status_code.prefix
       assert_equal STATUS_SUCCESS, status_code.attributes["Value"]
+    end
+
+    def test_assertion_embedded
+      assertion = @root.elements["saml:Assertion"]
+      assert_equal "Assertion", assertion.name
+      assert_equal "saml", assertion.prefix
+    end
+
+    def test_assertion_has_id
+      assertion = @root.elements["saml:Assertion"]
+      assert assertion.attributes["ID"].start_with?("_")
+    end
+
+    def test_assertion_inherits_issuer
+      url = "https://test.idp.example.com"
+      refute_equal url, DEFAULTS.issuer
+      response = Response.new(issuer: url).mimic
+      assertion = response.root.elements["saml:Assertion"]
+      issuer = assertion.elements["saml:Issuer"]
+      assert_equal url, issuer.text
+    end
+
+    def test_assertion_options_flow_through
+      email = "test@example.com"
+      refute_equal email, DEFAULTS.name_id
+      response = Response.new(name_id: email).mimic
+      assertion = response.root.elements["saml:Assertion"]
+      name_id = assertion.elements["saml:Subject/saml:NameID"]
+      assert_equal email, name_id.text
     end
   end
 end
