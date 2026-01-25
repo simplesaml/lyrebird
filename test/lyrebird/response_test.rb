@@ -164,5 +164,33 @@ module Lyrebird
       assert_nil root.elements["ds:Signature"]
       assert_nil root.elements["saml:Assertion/ds:Signature"]
     end
+
+    def test_assertion_not_encrypted_by_default
+      assert_nil @root.elements["saml:EncryptedAssertion"]
+    end
+
+    def test_encrypt_assertion_creates_encrypted_assertion
+      sp_cert = Certificate.generate
+      args = { encrypt_assertion: true, sp_certificate: sp_cert }
+      root = Response.new(**args).document.root
+      ea = root.elements["saml:EncryptedAssertion"]
+      assert_equal "EncryptedAssertion", ea.name
+      assert_equal "saml", ea.prefix
+    end
+
+    def test_encrypt_assertion_removes_plain_assertion
+      sp_cert = Certificate.generate
+      args = { encrypt_assertion: true, sp_certificate: sp_cert }
+      root = Response.new(**args).document.root
+      assert_nil root.elements["saml:Assertion"]
+    end
+
+    def test_encrypt_assertion_contains_encrypted_data
+      sp_cert = Certificate.generate
+      args = { encrypt_assertion: true, sp_certificate: sp_cert }
+      root = Response.new(**args).document.root
+      ed = root.elements["saml:EncryptedAssertion/xenc:EncryptedData"]
+      assert_equal "EncryptedData", ed.name
+    end
   end
 end

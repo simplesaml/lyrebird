@@ -9,6 +9,8 @@ module Lyrebird
       certificate: nil,
       sign_assertion: false,
       sign_response: false,
+      encrypt_assertion: false,
+      sp_certificate: nil,
       **assertion_options
     )
       @id = ID.generate
@@ -19,6 +21,8 @@ module Lyrebird
       @certificate = certificate
       @sign_assertion = sign_assertion
       @sign_response = sign_response
+      @encrypt_assertion = encrypt_assertion
+      @sp_certificate = sp_certificate
 
       @assertion = Assertion.new(
         issuer: issuer,
@@ -50,10 +54,16 @@ module Lyrebird
         r.add_attribute("InResponseTo", @in_response_to)
         r.add_element("saml:Issuer").text = @issuer
         r.add_element(status)
-        a = r.add_element(@assertion.document.root)
-        Signature.new(a, certificate: @certificate).sign! if @sign_assertion
+        r.add_element(assertion_element)
         Signature.new(r, certificate: @certificate).sign! if @sign_response
       end
+    end
+
+    def assertion_element
+      element = @assertion.document.root
+      Signature.new(element, certificate: @certificate).sign! if @sign_assertion
+      return element unless @encrypt_assertion
+      Encryption.new(element, @sp_certificate).encrypt!
     end
 
     def status
