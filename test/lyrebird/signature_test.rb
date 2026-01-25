@@ -39,5 +39,28 @@ module Lyrebird
       transform = transforms.elements.to_a("ds:Transform")[1]
       assert_equal EXC_C14N, transform.attributes["Algorithm"]
     end
+
+    def test_digest_method_element
+      digest_method = @reference.elements["ds:DigestMethod"]
+      assert_equal "DigestMethod", digest_method.name
+      assert_equal "ds", digest_method.prefix
+    end
+
+    def test_digest_method_algorithm
+      digest_method = @reference.elements["ds:DigestMethod"]
+      assert_equal SHA256_DIGEST, digest_method.attributes["Algorithm"]
+    end
+
+    def test_digest_value_element
+      digest_value = @reference.elements["ds:DigestValue"]
+      assert_equal "DigestValue", digest_value.name
+      assert_equal "ds", digest_value.prefix
+    end
+
+    def test_digest_value_is_base64
+      digest_value = @reference.elements["ds:DigestValue"]
+      decoded = Base64.strict_decode64(digest_value.text)
+      assert_equal 32, decoded.bytesize
+    end
   end
 end

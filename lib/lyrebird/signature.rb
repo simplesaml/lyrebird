@@ -15,6 +15,9 @@ module Lyrebird
       REXML::Element.new("ds:Reference").tap do |ref|
         ref.add_attribute("URI", "##{@element_id}")
         ref.add_element(transforms)
+        dm = ref.add_element("ds:DigestMethod")
+        dm.add_attribute("Algorithm", SHA256_DIGEST)
+        ref.add_element("ds:DigestValue").text = compute_digest(@element)
       end
     end
 
@@ -27,6 +30,11 @@ module Lyrebird
         c14n = t.add_element("ds:Transform")
         c14n.add_attribute("Algorithm", EXC_C14N)
       end
+    end
+
+    def compute_digest(element)
+      digest = OpenSSL::Digest::SHA256.digest(element.to_s)
+      Base64.strict_encode64(digest)
     end
   end
 end
