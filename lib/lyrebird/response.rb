@@ -6,6 +6,7 @@ module Lyrebird
       issuer: DEFAULTS.issuer,
       destination: DEFAULTS.recipient,
       in_response_to: DEFAULTS.in_response_to,
+      certificate: nil,
       sign_assertion: false,
       sign_response: false,
       **assertion_options
@@ -15,6 +16,7 @@ module Lyrebird
       @issuer = issuer
       @destination = destination
       @in_response_to = in_response_to
+      @certificate = certificate
       @sign_assertion = sign_assertion
       @sign_response = sign_response
 
@@ -48,7 +50,8 @@ module Lyrebird
         r.add_attribute("InResponseTo", @in_response_to)
         r.add_element("saml:Issuer").text = @issuer
         r.add_element(status)
-        r.add_element(@assertion.document.root)
+        a = r.add_element(@assertion.document.root)
+        Signature.new(a, certificate: @certificate).sign! if @sign_assertion
       end
     end
 

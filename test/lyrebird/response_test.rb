@@ -120,5 +120,19 @@ module Lyrebird
       name_id = assertion.elements["saml:Subject/saml:NameID"]
       assert_equal email, name_id.text
     end
+
+    def test_assertion_unsigned_by_default
+      assertion = @root.elements["saml:Assertion"]
+      assert_nil assertion.elements["ds:Signature"]
+    end
+
+    def test_sign_assertion_adds_signature
+      cert = Certificate.generate
+      root = Response.new(certificate: cert, sign_assertion: true).document.root
+      assertion = root.elements["saml:Assertion"]
+      signature = assertion.elements["ds:Signature"]
+      assert_equal "Signature", signature.name
+      assert_equal "ds", signature.prefix
+    end
   end
 end

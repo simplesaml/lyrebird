@@ -66,6 +66,16 @@ response.mimic    # Base64-encoded SAML response (for POST binding)
 response.document # REXML::Document for inspection
 ```
 
+### Signing the assertion
+```ruby
+cert = Lyrebird::Certificate.generate
+
+response = Lyrebird::Response.new(
+  certificate: cert,
+  sign_assertion: true
+)
+```
+
 ### NameID Formats
 ```ruby
 Lyrebird::NAMEID_EMAIL       # emailAddress (default)
