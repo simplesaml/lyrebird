@@ -63,7 +63,7 @@ module Lyrebird
       element = @assertion.document.root
       Signature.new(element, @idp_certificate).sign! if @sign_assertion
       return element unless @encrypt_assertion
-      Encryption.new(element, @sp_certificate).encrypt!
+      Encryption.new(element, @sp_certificate).encrypt
     end
 
     def status

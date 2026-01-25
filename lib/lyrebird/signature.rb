@@ -11,6 +11,7 @@ module Lyrebird
     def sign!
       issuer = @element.elements["saml:Issuer"]
       @element.insert_after(issuer, signature_element)
+      self
     end
 
     private

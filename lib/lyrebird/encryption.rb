@@ -8,7 +8,7 @@ module Lyrebird
       @aes_key = SecureRandom.random_bytes(32)
     end
 
-    def encrypt!
+    def encrypt
       encrypted_assertion
     end
 
