@@ -53,5 +53,18 @@ module Lyrebird
       response = Response.new(in_response_to: "_custom_request").mimic
       assert_equal "_custom_request", response.root.attributes["InResponseTo"]
     end
+
+    def test_issuer
+      issuer = @root.elements["saml:Issuer"]
+      assert_equal "Issuer", issuer.name
+      assert_equal "saml", issuer.prefix
+      assert_equal DEFAULTS.issuer, issuer.text
+    end
+
+    def test_issuer_override
+      response = Response.new(issuer: "https://custom.idp.example.com").mimic
+      issuer = response.root.elements["saml:Issuer"]
+      assert_equal "https://custom.idp.example.com", issuer.text
+    end
   end
 end

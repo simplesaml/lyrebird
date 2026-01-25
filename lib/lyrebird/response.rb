@@ -3,6 +3,7 @@
 module Lyrebird
   class Response
     def initialize(
+      issuer: DEFAULTS.issuer,
       destination: DEFAULTS.recipient,
       in_response_to: DEFAULTS.in_response_to,
       sign_assertion: false,
@@ -11,12 +12,14 @@ module Lyrebird
     )
       @id = ID.generate
       @issue_instant = Time.now.utc
+      @issuer = issuer
       @destination = destination
       @in_response_to = in_response_to
       @sign_assertion = sign_assertion
       @sign_response = sign_response
 
       @assertion = Assertion.new(
+        issuer: issuer,
         in_response_to: in_response_to,
         **assertion_options
       )
@@ -39,6 +42,7 @@ module Lyrebird
         r.add_attribute("IssueInstant", @issue_instant.iso8601)
         r.add_attribute("Destination", @destination)
         r.add_attribute("InResponseTo", @in_response_to)
+        r.add_element("saml:Issuer").text = @issuer
       end
     end
   end
