@@ -14,6 +14,7 @@ module Lyrebird
     attr_accessor :in_response_to
     attr_accessor :valid_for
     attr_accessor :audience
+    attr_accessor :authn_context
 
     def initialize
       @issuer = "https://idp.example.com"
@@ -23,6 +24,10 @@ module Lyrebird
       @in_response_to = "_request_id"
       @valid_for = 300 # 5 minutes
       @audience = "https://sp.example.com"
+
+      @authn_context =
+        "urn:oasis:names:tc:SAML:2.0:ac:classes:" \
+        "PasswordProtectedTransport"
     end
   end
 

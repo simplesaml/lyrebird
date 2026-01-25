@@ -12,6 +12,7 @@ module Lyrebird
       @scd = @sc.elements["saml:SubjectConfirmationData"]
       @conditions = @root.elements["saml:Conditions"]
       @audience_restriction = @conditions.elements["saml:AudienceRestriction"]
+      @authn_statement = @root.elements["saml:AuthnStatement"]
     end
 
     def test_root_name
@@ -187,6 +188,44 @@ module Lyrebird
       conditions = assertion.root.elements["saml:Conditions"]
       ar = conditions.elements["saml:AudienceRestriction"]
       assert_equal audience, ar.elements["saml:Audience"].text
+    end
+
+    def test_authn_statement
+      assert_equal "AuthnStatement", @authn_statement.name
+      assert_equal "saml", @authn_statement.prefix
+    end
+
+    def test_authn_statement_authn_instant
+      authn_instant = Time.iso8601(@authn_statement.attributes["AuthnInstant"])
+      assert_in_delta Time.now.to_i, authn_instant.to_i, 1
+    end
+
+    def test_authn_statement_session_index
+      assert @authn_statement.attributes["SessionIndex"].start_with?("_")
+    end
+
+    def test_authn_context
+      authn_context = @authn_statement.elements["saml:AuthnContext"]
+      assert_equal "AuthnContext", authn_context.name
+      assert_equal "saml", authn_context.prefix
+    end
+
+    def test_authn_context_class_ref
+      ac = @authn_statement.elements["saml:AuthnContext"]
+      class_ref = ac.elements["saml:AuthnContextClassRef"]
+      assert_equal "AuthnContextClassRef", class_ref.name
+      assert_equal "saml", class_ref.prefix
+      assert_equal DEFAULTS.authn_context, class_ref.text
+    end
+
+    def test_authn_context_override
+      custom_ref = "urn:oasis:names:tc:SAML:2.0:ac:classes:Password"
+      refute_equal custom_ref, DEFAULTS.authn_context
+      assertion = Assertion.new(authn_context: custom_ref).mimic
+      as = assertion.root.elements["saml:AuthnStatement"]
+      ac = as.elements["saml:AuthnContext"]
+      class_ref = ac.elements["saml:AuthnContextClassRef"]
+      assert_equal custom_ref, class_ref.text
     end
   end
 end

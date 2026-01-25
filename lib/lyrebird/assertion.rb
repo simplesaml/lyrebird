@@ -9,9 +9,11 @@ module Lyrebird
       recipient: DEFAULTS.recipient,
       in_response_to: DEFAULTS.in_response_to,
       valid_for: DEFAULTS.valid_for,
-      audience: DEFAULTS.audience
+      audience: DEFAULTS.audience,
+      authn_context: DEFAULTS.authn_context
     )
       @id = ID.generate
+      @session_index = ID.generate
       @issue_instant = Time.now.utc
       @issuer = issuer
       @name_id = name_id
@@ -20,6 +22,7 @@ module Lyrebird
       @in_response_to = in_response_to
       @not_on_or_after = @issue_instant + valid_for
       @audience = audience
+      @authn_context = authn_context
     end
 
     def mimic
@@ -39,6 +42,7 @@ module Lyrebird
         r.add_element("saml:Issuer").text = @issuer
         r.add_element(subject)
         r.add_element(conditions)
+        r.add_element(authn_statement)
       end
     end
 
@@ -67,6 +71,16 @@ module Lyrebird
         c.add_attribute("NotOnOrAfter", @not_on_or_after.iso8601)
         ar = c.add_element("saml:AudienceRestriction")
         ar.add_element("saml:Audience").text = @audience
+      end
+    end
+
+    def authn_statement
+      REXML::Element.new("saml:AuthnStatement").tap do |as|
+        as.add_attribute("AuthnInstant", @issue_instant.iso8601)
+        as.add_attribute("SessionIndex", @session_index)
+        ac = as.add_element("saml:AuthnContext")
+        cr = ac.add_element("saml:AuthnContextClassRef")
+        cr.text = @authn_context
       end
     end
   end
