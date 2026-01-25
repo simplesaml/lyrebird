@@ -227,5 +227,88 @@ module Lyrebird
       class_ref = ac.elements["saml:AuthnContextClassRef"]
       assert_equal custom_ref, class_ref.text
     end
+
+    def test_default_attributes
+      as = @root.elements["saml:AttributeStatement"]
+      attrs = as.elements.to_a("saml:Attribute")
+      assert_equal 2, attrs.size
+
+      first = attrs.find { |a| a.attributes["Name"] == "first_name" }
+      assert_equal "Test", first.elements["saml:AttributeValue"].text
+
+      last = attrs.find { |a| a.attributes["Name"] == "last_name" }
+      assert_equal "User", last.elements["saml:AttributeValue"].text
+    end
+
+    def test_no_attribute_statement_when_empty
+      assertion = Assertion.new(attributes: {}).mimic
+      assert_nil assertion.root.elements["saml:AttributeStatement"]
+    end
+
+    def test_attribute_statement_with_single_value
+      attributes = { "email" => "user@example.com" }
+      assertion = Assertion.new(attributes: attributes).mimic
+      as = assertion.root.elements["saml:AttributeStatement"]
+      assert_equal "AttributeStatement", as.name
+      assert_equal "saml", as.prefix
+    end
+
+    def test_attribute_name_and_format
+      attributes = { "email" => "user@example.com" }
+      assertion = Assertion.new(attributes: attributes).mimic
+      attr = assertion.root.elements["saml:AttributeStatement/saml:Attribute"]
+      assert_equal "Attribute", attr.name
+      assert_equal "saml", attr.prefix
+      assert_equal "email", attr.attributes["Name"]
+      assert_equal ATTR_NAME_FORMAT, attr.attributes["NameFormat"]
+    end
+
+    def test_attribute_single_value
+      attributes = { "email" => "user@example.com" }
+      assertion = Assertion.new(attributes: attributes).mimic
+      attr = assertion.root.elements["saml:AttributeStatement/saml:Attribute"]
+      value = attr.elements["saml:AttributeValue"]
+      assert_equal "AttributeValue", value.name
+      assert_equal "saml", value.prefix
+      assert_equal "user@example.com", value.text
+    end
+
+    def test_attribute_multi_value
+      attributes = { "groups" => ["admin", "users", "developers"] }
+      assertion = Assertion.new(attributes: attributes).mimic
+      attr = assertion.root.elements["saml:AttributeStatement/saml:Attribute"]
+      values = attr.elements.to_a("saml:AttributeValue")
+      assert_equal 3, values.size
+      assert_equal "admin", values[0].text
+      assert_equal "users", values[1].text
+      assert_equal "developers", values[2].text
+    end
+
+    def test_multiple_attributes
+      attributes = {
+        "email" => "user@example.com",
+        "name" => "Test User",
+        "groups" => ["admin", "users"]
+      }
+
+      assertion = Assertion.new(attributes: attributes).mimic
+      as = assertion.root.elements["saml:AttributeStatement"]
+      attrs = as.elements.to_a("saml:Attribute")
+      assert_equal 3, attrs.size
+
+      email_attr = attrs.find { |a| a.attributes["Name"] == "email" }
+      email_value = email_attr.elements["saml:AttributeValue"].text
+      assert_equal "user@example.com", email_value
+
+      name_attr = attrs.find { |a| a.attributes["Name"] == "name" }
+      name_value = name_attr.elements["saml:AttributeValue"].text
+      assert_equal "Test User", name_value
+
+      groups_attr = attrs.find { |a| a.attributes["Name"] == "groups" }
+      group_values = groups_attr.elements.to_a("saml:AttributeValue")
+      assert_equal 2, group_values.size
+      assert_equal "admin", group_values[0].text
+      assert_equal "users", group_values[1].text
+    end
   end
 end

@@ -15,6 +15,7 @@ module Lyrebird
     attr_accessor :valid_for
     attr_accessor :audience
     attr_accessor :authn_context
+    attr_accessor :attributes
 
     def initialize
       @issuer = "https://idp.example.com"
@@ -28,6 +29,11 @@ module Lyrebird
       @authn_context =
         "urn:oasis:names:tc:SAML:2.0:ac:classes:" \
         "PasswordProtectedTransport"
+
+      @attributes = {
+        "first_name" => "Test",
+        "last_name" => "User",
+      }
     end
   end
 

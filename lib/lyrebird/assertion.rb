@@ -10,7 +10,8 @@ module Lyrebird
       in_response_to: DEFAULTS.in_response_to,
       valid_for: DEFAULTS.valid_for,
       audience: DEFAULTS.audience,
-      authn_context: DEFAULTS.authn_context
+      authn_context: DEFAULTS.authn_context,
+      attributes: DEFAULTS.attributes
     )
       @id = ID.generate
       @session_index = ID.generate
@@ -23,6 +24,7 @@ module Lyrebird
       @not_on_or_after = @issue_instant + valid_for
       @audience = audience
       @authn_context = authn_context
+      @attributes = attributes
     end
 
     def mimic
@@ -43,6 +45,7 @@ module Lyrebird
         r.add_element(subject)
         r.add_element(conditions)
         r.add_element(authn_statement)
+        r.add_element(attribute_statement) if @attributes.any?
       end
     end
 
@@ -81,6 +84,20 @@ module Lyrebird
         ac = as.add_element("saml:AuthnContext")
         cr = ac.add_element("saml:AuthnContextClassRef")
         cr.text = @authn_context
+      end
+    end
+
+    def attribute_statement
+      REXML::Element.new("saml:AttributeStatement").tap do |as|
+        @attributes.each do |name, values|
+          a = as.add_element("saml:Attribute")
+          a.add_attribute("Name", name)
+          a.add_attribute("NameFormat", ATTR_NAME_FORMAT)
+
+          Array(values).each do |value|
+            a.add_element("saml:AttributeValue").text = value
+          end
+        end
       end
     end
   end
