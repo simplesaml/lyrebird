@@ -99,5 +99,26 @@ module Lyrebird
       public_key = @certificate.certificate.public_key
       assert public_key.verify("SHA256", signature, @signed_info.to_s)
     end
+
+    def test_key_info_element
+      ki = @signature.key_info
+      assert_equal "KeyInfo", ki.name
+      assert_equal "ds", ki.prefix
+    end
+
+    def test_x509_data_element
+      ki = @signature.key_info
+      x509_data = ki.elements["ds:X509Data"]
+      assert_equal "X509Data", x509_data.name
+      assert_equal "ds", x509_data.prefix
+    end
+
+    def test_x509_certificate_element
+      ki = @signature.key_info
+      x509_cert = ki.elements["ds:X509Data/ds:X509Certificate"]
+      assert_equal "X509Certificate", x509_cert.name
+      assert_equal "ds", x509_cert.prefix
+      assert_equal @certificate.base64, x509_cert.text
+    end
   end
 end

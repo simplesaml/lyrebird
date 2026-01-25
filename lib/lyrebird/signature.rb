@@ -28,6 +28,13 @@ module Lyrebird
       end
     end
 
+    def key_info
+      REXML::Element.new("ds:KeyInfo").tap do |ki|
+        x = ki.add_element("ds:X509Data")
+        x.add_element("ds:X509Certificate").text = @certificate.base64
+      end
+    end
+
     private
 
     def reference
