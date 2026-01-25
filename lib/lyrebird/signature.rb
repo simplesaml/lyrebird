@@ -9,6 +9,17 @@ module Lyrebird
     end
 
     def sign!
+      issuer = @element.elements["saml:Issuer"]
+      @element.insert_after(issuer, signature_element)
+    end
+
+    def signature_element
+      REXML::Element.new("ds:Signature").tap do |sig|
+        sig.add_namespace("ds", XMLDSIG_NS)
+        sig.add_element(signed_info)
+        sig.add_element(signature_value)
+        sig.add_element(key_info)
+      end
     end
 
     def signed_info

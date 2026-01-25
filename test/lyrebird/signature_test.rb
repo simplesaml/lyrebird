@@ -120,5 +120,35 @@ module Lyrebird
       assert_equal "ds", x509_cert.prefix
       assert_equal @certificate.base64, x509_cert.text
     end
+
+    def test_signature_element
+      sig = @signature.signature_element
+      assert_equal "Signature", sig.name
+      assert_equal "ds", sig.prefix
+      assert_equal XMLDSIG_NS, sig.namespace
+    end
+
+    def test_signature_element_children
+      sig = @signature.signature_element
+      children = sig.elements.to_a
+      assert_equal 3, children.size
+      assert_equal "SignedInfo", children[0].name
+      assert_equal "SignatureValue", children[1].name
+      assert_equal "KeyInfo", children[2].name
+    end
+
+    def test_sign_inserts_after_issuer
+      @signature.sign!
+      children = @element.elements.to_a
+      issuer_index = children.index { |e| e.name == "Issuer" }
+      signature_index = children.index { |e| e.name == "Signature" }
+      assert_equal issuer_index + 1, signature_index
+    end
+
+    def test_sign_adds_signature_to_element
+      assert_nil @element.elements["ds:Signature"]
+      @signature.sign!
+      refute_nil @element.elements["ds:Signature"]
+    end
   end
 end
