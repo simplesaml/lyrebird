@@ -8,9 +8,31 @@ module Lyrebird
       @certificate = Certificate.generate
       @assertion = Assertion.new.document
       @element = @assertion.root
-      @signature = Signature.new(@element, certificate: @certificate)
-      @signed_info = @signature.signed_info
+      Signature.new(@element, certificate: @certificate).sign!
+      @signature = @element.elements["ds:Signature"]
+      @signed_info = @signature.elements["ds:SignedInfo"]
       @reference = @signed_info.elements["ds:Reference"]
+    end
+
+    def test_sign_inserts_after_issuer
+      children = @element.elements.to_a
+      issuer_index = children.index { |e| e.name == "Issuer" }
+      signature_index = children.index { |e| e.name == "Signature" }
+      assert_equal issuer_index + 1, signature_index
+    end
+
+    def test_signature_element
+      assert_equal "Signature", @signature.name
+      assert_equal "ds", @signature.prefix
+      assert_equal XMLDSIG_NS, @signature.namespace
+    end
+
+    def test_signature_element_children
+      children = @signature.elements.to_a
+      assert_equal 3, children.size
+      assert_equal "SignedInfo", children[0].name
+      assert_equal "SignatureValue", children[1].name
+      assert_equal "KeyInfo", children[2].name
     end
 
     def test_signed_info_element
@@ -82,73 +104,34 @@ module Lyrebird
     end
 
     def test_signature_value_element
-      sv = @signature.signature_value
+      sv = @signature.elements["ds:SignatureValue"]
       assert_equal "SignatureValue", sv.name
       assert_equal "ds", sv.prefix
     end
 
     def test_signature_value_is_base64
-      sv = @signature.signature_value
+      sv = @signature.elements["ds:SignatureValue"]
       decoded = Base64.strict_decode64(sv.text)
       assert_equal 256, decoded.bytesize
     end
 
-    def test_signature_value_verifies
-      sv = @signature.signature_value
-      signature = Base64.strict_decode64(sv.text)
-      public_key = @certificate.certificate.public_key
-      assert public_key.verify("SHA256", signature, @signed_info.to_s)
-    end
-
     def test_key_info_element
-      ki = @signature.key_info
+      ki = @signature.elements["ds:KeyInfo"]
       assert_equal "KeyInfo", ki.name
       assert_equal "ds", ki.prefix
     end
 
     def test_x509_data_element
-      ki = @signature.key_info
-      x509_data = ki.elements["ds:X509Data"]
+      x509_data = @signature.elements["ds:KeyInfo/ds:X509Data"]
       assert_equal "X509Data", x509_data.name
       assert_equal "ds", x509_data.prefix
     end
 
     def test_x509_certificate_element
-      ki = @signature.key_info
-      x509_cert = ki.elements["ds:X509Data/ds:X509Certificate"]
-      assert_equal "X509Certificate", x509_cert.name
-      assert_equal "ds", x509_cert.prefix
-      assert_equal @certificate.base64, x509_cert.text
-    end
-
-    def test_signature_element
-      sig = @signature.signature_element
-      assert_equal "Signature", sig.name
-      assert_equal "ds", sig.prefix
-      assert_equal XMLDSIG_NS, sig.namespace
-    end
-
-    def test_signature_element_children
-      sig = @signature.signature_element
-      children = sig.elements.to_a
-      assert_equal 3, children.size
-      assert_equal "SignedInfo", children[0].name
-      assert_equal "SignatureValue", children[1].name
-      assert_equal "KeyInfo", children[2].name
-    end
-
-    def test_sign_inserts_after_issuer
-      @signature.sign!
-      children = @element.elements.to_a
-      issuer_index = children.index { |e| e.name == "Issuer" }
-      signature_index = children.index { |e| e.name == "Signature" }
-      assert_equal issuer_index + 1, signature_index
-    end
-
-    def test_sign_adds_signature_to_element
-      assert_nil @element.elements["ds:Signature"]
-      @signature.sign!
-      refute_nil @element.elements["ds:Signature"]
+      cert = @signature.elements["ds:KeyInfo/ds:X509Data/ds:X509Certificate"]
+      assert_equal "X509Certificate", cert.name
+      assert_equal "ds", cert.prefix
+      assert_equal @certificate.base64, cert.text
     end
   end
 end

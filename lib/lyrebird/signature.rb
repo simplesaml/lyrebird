@@ -13,6 +13,8 @@ module Lyrebird
       @element.insert_after(issuer, signature_element)
     end
 
+    private
+
     def signature_element
       REXML::Element.new("ds:Signature").tap do |sig|
         sig.add_namespace("ds", XMLDSIG_NS)
@@ -45,8 +47,6 @@ module Lyrebird
         x.add_element("ds:X509Certificate").text = @certificate.base64
       end
     end
-
-    private
 
     def reference
       REXML::Element.new("ds:Reference").tap do |ref|
