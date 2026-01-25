@@ -11,6 +11,7 @@ require_relative "lyrebird/certificate"
 require_relative "lyrebird/defaults"
 require_relative "lyrebird/id"
 require_relative "lyrebird/namespaces"
+require_relative "lyrebird/response"
 require_relative "lyrebird/version"
 
 module Lyrebird
