@@ -2,7 +2,7 @@
 
 module Lyrebird
   class Signature
-    def initialize(element, certificate:)
+    def initialize(element, certificate)
       @element = element
       @certificate = certificate
       @element_id = @element.attributes["ID"]

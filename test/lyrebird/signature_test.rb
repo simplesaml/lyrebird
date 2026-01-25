@@ -8,7 +8,7 @@ module Lyrebird
       @certificate = Certificate.generate
       @assertion = Assertion.new.document
       @element = @assertion.root
-      Signature.new(@element, certificate: @certificate).sign!
+      Signature.new(@element, @certificate).sign!
       @signature = @element.elements["ds:Signature"]
       @signed_info = @signature.elements["ds:SignedInfo"]
       @reference = @signed_info.elements["ds:Reference"]

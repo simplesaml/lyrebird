@@ -55,13 +55,13 @@ module Lyrebird
         r.add_element("saml:Issuer").text = @issuer
         r.add_element(status)
         r.add_element(assertion_element)
-        Signature.new(r, certificate: @idp_certificate).sign! if @sign_response
+        Signature.new(r, @idp_certificate).sign! if @sign_response
       end
     end
 
     def assertion_element
       element = @assertion.document.root
-      Signature.new(element, certificate: @idp_certificate).sign! if @sign_assertion
+      Signature.new(element, @idp_certificate).sign! if @sign_assertion
       return element unless @encrypt_assertion
       Encryption.new(element, @sp_certificate).encrypt!
     end
