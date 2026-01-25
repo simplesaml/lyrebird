@@ -80,5 +80,24 @@ module Lyrebird
       decoded = Base64.strict_decode64(digest_value.text)
       assert_equal 32, decoded.bytesize
     end
+
+    def test_signature_value_element
+      sv = @signature.signature_value
+      assert_equal "SignatureValue", sv.name
+      assert_equal "ds", sv.prefix
+    end
+
+    def test_signature_value_is_base64
+      sv = @signature.signature_value
+      decoded = Base64.strict_decode64(sv.text)
+      assert_equal 256, decoded.bytesize
+    end
+
+    def test_signature_value_verifies
+      sv = @signature.signature_value
+      signature = Base64.strict_decode64(sv.text)
+      public_key = @certificate.certificate.public_key
+      assert public_key.verify("SHA256", signature, @signed_info.to_s)
+    end
   end
 end

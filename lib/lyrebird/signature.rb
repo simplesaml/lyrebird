@@ -21,6 +21,13 @@ module Lyrebird
       end
     end
 
+    def signature_value
+      REXML::Element.new("ds:SignatureValue").tap do |sv|
+        sig = @certificate.private_key.sign("SHA256", signed_info.to_s)
+        sv.text = Base64.strict_encode64(sig)
+      end
+    end
+
     private
 
     def reference
