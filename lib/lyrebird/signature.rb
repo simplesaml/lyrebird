@@ -11,6 +11,18 @@ module Lyrebird
     def sign!
     end
 
+    def signed_info
+      REXML::Element.new("ds:SignedInfo").tap do |si|
+        cm = si.add_element("ds:CanonicalizationMethod")
+        cm.add_attribute("Algorithm", EXC_C14N)
+        sm = si.add_element("ds:SignatureMethod")
+        sm.add_attribute("Algorithm", RSA_SHA256)
+        si.add_element(reference)
+      end
+    end
+
+    private
+
     def reference
       REXML::Element.new("ds:Reference").tap do |ref|
         ref.add_attribute("URI", "##{@element_id}")
@@ -20,8 +32,6 @@ module Lyrebird
         ref.add_element("ds:DigestValue").text = compute_digest(@element)
       end
     end
-
-    private
 
     def transforms
       REXML::Element.new("ds:Transforms").tap do |t|

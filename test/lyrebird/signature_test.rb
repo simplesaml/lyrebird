@@ -9,7 +9,25 @@ module Lyrebird
       @assertion = Assertion.new.document
       @element = @assertion.root
       @signature = Signature.new(@element, certificate: @certificate)
-      @reference = @signature.reference
+      @signed_info = @signature.signed_info
+      @reference = @signed_info.elements["ds:Reference"]
+    end
+
+    def test_signed_info_element
+      assert_equal "SignedInfo", @signed_info.name
+      assert_equal "ds", @signed_info.prefix
+    end
+
+    def test_canonicalization_method
+      cm = @signed_info.elements["ds:CanonicalizationMethod"]
+      assert_equal "CanonicalizationMethod", cm.name
+      assert_equal EXC_C14N, cm.attributes["Algorithm"]
+    end
+
+    def test_signature_method
+      sm = @signed_info.elements["ds:SignatureMethod"]
+      assert_equal "SignatureMethod", sm.name
+      assert_equal RSA_SHA256, sm.attributes["Algorithm"]
     end
 
     def test_reference_element
