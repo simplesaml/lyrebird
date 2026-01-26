@@ -2,6 +2,12 @@
 
 module Lyrebird
   class Response
+    def self.build(**kwargs)
+      config = OpenStruct.new(kwargs)
+      yield config if block_given?
+      new(**config.to_h)
+    end
+
     def initialize(
       issuer: DEFAULTS.issuer,
       destination: DEFAULTS.recipient,

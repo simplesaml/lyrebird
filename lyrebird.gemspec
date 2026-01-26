@@ -18,6 +18,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   spec.add_dependency "base64"
+  spec.add_dependency "ostruct"
   spec.add_dependency "rexml"
 
   spec.add_development_dependency "minitest"
