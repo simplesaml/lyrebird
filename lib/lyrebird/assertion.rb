@@ -13,8 +13,6 @@ module Lyrebird
       authn_context: DEFAULTS.authn_context,
       attributes: DEFAULTS.attributes
     )
-      @id = ID.generate
-      @session_index = ID.generate
       @issue_instant = Time.now.utc
       @issuer = issuer
       @name_id = name_id
@@ -38,7 +36,7 @@ module Lyrebird
     def root
       REXML::Element.new("saml:Assertion").tap do |r|
         r.add_namespace("saml", SAML_ASSERTION_NS)
-        r.add_attribute("ID", @id)
+        r.add_attribute("ID", ID.generate)
         r.add_attribute("Version", "2.0")
         r.add_attribute("IssueInstant", @issue_instant.iso8601)
         r.add_element("saml:Issuer").text = @issuer
@@ -80,7 +78,7 @@ module Lyrebird
     def authn_statement
       REXML::Element.new("saml:AuthnStatement").tap do |as|
         as.add_attribute("AuthnInstant", @issue_instant.iso8601)
-        as.add_attribute("SessionIndex", @session_index)
+        as.add_attribute("SessionIndex", ID.generate)
         ac = as.add_element("saml:AuthnContext")
         cr = ac.add_element("saml:AuthnContextClassRef")
         cr.text = @authn_context

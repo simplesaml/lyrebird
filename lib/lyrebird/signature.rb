@@ -5,7 +5,6 @@ module Lyrebird
     def initialize(element, certificate)
       @element = element
       @certificate = certificate
-      @element_id = @element.attributes["ID"]
     end
 
     def sign!
@@ -51,7 +50,7 @@ module Lyrebird
 
     def reference
       REXML::Element.new("ds:Reference").tap do |ref|
-        ref.add_attribute("URI", "##{@element_id}")
+        ref.add_attribute("URI", "##{@element.attributes["ID"]}")
         ref.add_element(transforms)
         dm = ref.add_element("ds:DigestMethod")
         dm.add_attribute("Algorithm", SHA256_DIGEST)

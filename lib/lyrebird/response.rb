@@ -13,8 +13,6 @@ module Lyrebird
       sp_certificate: nil,
       **assertion_options
     )
-      @id = ID.generate
-      @issue_instant = Time.now.utc
       @issuer = issuer
       @destination = destination
       @in_response_to = in_response_to
@@ -47,9 +45,9 @@ module Lyrebird
       REXML::Element.new("samlp:Response").tap do |r|
         r.add_namespace("samlp", SAML_PROTOCOL_NS)
         r.add_namespace("saml", SAML_ASSERTION_NS)
-        r.add_attribute("ID", @id)
+        r.add_attribute("ID", ID.generate)
         r.add_attribute("Version", "2.0")
-        r.add_attribute("IssueInstant", @issue_instant.iso8601)
+        r.add_attribute("IssueInstant", Time.now.utc.iso8601)
         r.add_attribute("Destination", @destination)
         r.add_attribute("InResponseTo", @in_response_to)
         r.add_element("saml:Issuer").text = @issuer
