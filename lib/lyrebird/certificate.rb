@@ -25,7 +25,8 @@ module Lyrebird
       @private_key = private_key
       @common_name = cn
       @organization = o
-      @not_after = valid_until || Time.now + (valid_for * 24 * 60 * 60)
+      @valid_for = valid_for
+      @valid_until = valid_until
       @certificate = certificate || build_certificate
     end
 
@@ -48,12 +49,14 @@ module Lyrebird
     private
 
     def build_certificate
+      now = Time.now
+
       OpenSSL::X509::Certificate.new.tap do |c|
         c.public_key = @private_key.public_key
         c.subject = build_subject
         c.issuer = c.subject
-        c.not_before = Time.now
-        c.not_after = @not_after
+        c.not_before = now
+        c.not_after = @valid_until || now + (@valid_for * 86_400)
         c.sign(@private_key, OpenSSL::Digest::SHA256.new)
       end
     end
