@@ -5,7 +5,7 @@ require "test_helper"
 module Lyrebird
   class SignatureTest < Minitest::Test
     def setup
-      @certificate = Certificate.generate
+      @certificate = Certificate.build
       @assertion = Assertion.new.document
       @element = @assertion.root
       Signature.new(@element, @certificate).sign!

@@ -4,29 +4,32 @@ module Lyrebird
   class Certificate
     attr_reader :key, :x509
 
-    def self.generate(bits: 2048, **options)
-      new(OpenSSL::PKey::RSA.new(bits), **options)
+    def self.build(**kwargs)
+      config = OpenStruct.new(kwargs)
+      yield config if block_given?
+      new(**config.to_h)
     end
 
     def self.load(key_pem:, x509_pem:)
       key = OpenSSL::PKey::RSA.new(key_pem)
       x509 = OpenSSL::X509::Certificate.new(x509_pem)
-      new(key, x509: x509)
+      new(key: key, x509: x509)
     end
 
     def initialize(
-      key,
+      bits: 2048,
       cn: nil,
       o: nil,
       valid_for: 365,
       valid_until: nil,
+      key: nil,
       x509: nil
     )
-      @key = key
       @common_name = cn
       @organization = o
       @valid_for = valid_for
       @valid_until = valid_until
+      @key = key || OpenSSL::PKey::RSA.new(bits)
       @x509 = x509 || build_x509
     end
 

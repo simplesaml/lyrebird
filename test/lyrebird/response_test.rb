@@ -209,7 +209,7 @@ module Lyrebird
     end
 
     def test_sign_with_signs_response_and_assertion
-      root = Response.new(sign_with: Certificate.generate).document.root
+      root = Response.new(sign_with: Certificate.build).document.root
       refute_nil root.elements["ds:Signature"]
       refute_nil root.elements["saml:Assertion/ds:Signature"]
     end
@@ -219,19 +219,19 @@ module Lyrebird
     end
 
     def test_encrypt_with_creates_encrypted_assertion
-      root = Response.new(encrypt_with: Certificate.generate).document.root
+      root = Response.new(encrypt_with: Certificate.build).document.root
       ea = root.elements["saml:EncryptedAssertion"]
       assert_equal "EncryptedAssertion", ea.name
       assert_equal "saml", ea.prefix
     end
 
     def test_encrypt_with_removes_plain_assertion
-      root = Response.new(encrypt_with: Certificate.generate).document.root
+      root = Response.new(encrypt_with: Certificate.build).document.root
       assert_nil root.elements["saml:Assertion"]
     end
 
     def test_encrypt_with_contains_encrypted_data
-      root = Response.new(encrypt_with: Certificate.generate).document.root
+      root = Response.new(encrypt_with: Certificate.build).document.root
       ed = root.elements["saml:EncryptedAssertion/xenc:EncryptedData"]
       assert_equal "EncryptedData", ed.name
     end

@@ -5,7 +5,7 @@ require "test_helper"
 module Lyrebird
   class CertificateTest < Minitest::Test
     def setup
-      @certificate = Certificate.generate
+      @certificate = Certificate.build
     end
 
     def test_key_is_rsa
@@ -17,7 +17,7 @@ module Lyrebird
     end
 
     def test_key_with_custom_bits
-      certificate = Certificate.generate(bits: 4096)
+      certificate = Certificate.build(bits: 4096)
       assert_equal 4096, certificate.key.n.num_bits
     end
 
@@ -39,19 +39,19 @@ module Lyrebird
     end
 
     def test_x509_with_custom_subject
-      certificate = Certificate.generate(cn: "Test", o: "Acme")
+      certificate = Certificate.build(cn: "Test", o: "Acme")
       assert_equal "/CN=Test/O=Acme", certificate.x509.subject.to_s
     end
 
     def test_x509_with_custom_valid_for
-      certificate = Certificate.generate(valid_for: 30).x509
+      certificate = Certificate.build(valid_for: 30).x509
       thirty_days = 30 * 24 * 60 * 60
       assert_in_delta Time.now + thirty_days, certificate.not_after, 1
     end
 
     def test_x509_with_valid_until
       valid_until = Time.new(2030, 1, 1)
-      certificate = Certificate.generate(valid_until: valid_until)
+      certificate = Certificate.build(valid_until: valid_until)
       assert_equal valid_until, certificate.x509.not_after
     end
 
@@ -73,6 +73,15 @@ module Lyrebird
       der = @certificate.x509.to_der
       expected = Base64.strict_encode64(der)
       assert_equal expected, @certificate.base64
+    end
+
+    def test_build_with_block
+      certificate = Certificate.build do |c|
+        c.cn = "Name"
+        c.o = "Org"
+      end
+
+      assert_equal "/CN=Name/O=Org", certificate.x509.subject.to_s
     end
 
     def test_load

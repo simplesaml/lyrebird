@@ -7,7 +7,7 @@ module Lyrebird
     def setup
       @assertion = Assertion.new.document
       @element = @assertion.root
-      @certificate = Certificate.generate
+      @certificate = Certificate.build
       @encrypted = Encryption.new(@element, @certificate).encrypt
       @ed = @encrypted.elements["xenc:EncryptedData"]
       @ki = @ed.elements["ds:KeyInfo"]
