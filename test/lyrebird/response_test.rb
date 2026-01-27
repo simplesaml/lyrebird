@@ -193,74 +193,35 @@ module Lyrebird
       assert_equal email, name_id.text
     end
 
-    def test_assertion_unsigned_by_default
-      assertion = @root.elements["saml:Assertion"]
-      assert_nil assertion.elements["ds:Signature"]
-    end
-
-    def test_sign_assertion_adds_signature
-      cert = Certificate.generate
-      root = Response.new(idp_certificate: cert, sign_assertion: true).document.root
-      assertion = root.elements["saml:Assertion"]
-      signature = assertion.elements["ds:Signature"]
-      assert_equal "Signature", signature.name
-      assert_equal "ds", signature.prefix
-    end
-
-    def test_response_unsigned_by_default
+    def test_unsigned_by_default
       assert_nil @root.elements["ds:Signature"]
+      assert_nil @root.elements["saml:Assertion/ds:Signature"]
     end
 
-    def test_sign_response_adds_signature
-      args = { idp_certificate: Certificate.generate, sign_response: true }
-      root = Response.new(**args).document.root
-      signature = root.elements["ds:Signature"]
-      assert_equal "Signature", signature.name
-      assert_equal "ds", signature.prefix
-    end
-
-    def test_sign_both_response_and_assertion
-      args = {
-        idp_certificate: Certificate.generate,
-        sign_assertion: true,
-        sign_response: true
-      }
-
-      root = Response.new(**args).document.root
+    def test_sign_with_signs_response_and_assertion
+      root = Response.new(sign_with: Certificate.generate).document.root
       refute_nil root.elements["ds:Signature"]
       refute_nil root.elements["saml:Assertion/ds:Signature"]
     end
 
-    def test_sign_neither_response_nor_assertion
-      root = Response.new(idp_certificate: Certificate.generate).document.root
-      assert_nil root.elements["ds:Signature"]
-      assert_nil root.elements["saml:Assertion/ds:Signature"]
-    end
-
-    def test_assertion_not_encrypted_by_default
+    def test_not_encrypted_by_default
       assert_nil @root.elements["saml:EncryptedAssertion"]
     end
 
-    def test_encrypt_assertion_creates_encrypted_assertion
-      sp_cert = Certificate.generate
-      args = { encrypt_assertion: true, sp_certificate: sp_cert }
-      root = Response.new(**args).document.root
+    def test_encrypt_with_creates_encrypted_assertion
+      root = Response.new(encrypt_with: Certificate.generate).document.root
       ea = root.elements["saml:EncryptedAssertion"]
       assert_equal "EncryptedAssertion", ea.name
       assert_equal "saml", ea.prefix
     end
 
-    def test_encrypt_assertion_removes_plain_assertion
-      sp_cert = Certificate.generate
-      args = { encrypt_assertion: true, sp_certificate: sp_cert }
-      root = Response.new(**args).document.root
+    def test_encrypt_with_removes_plain_assertion
+      root = Response.new(encrypt_with: Certificate.generate).document.root
       assert_nil root.elements["saml:Assertion"]
     end
 
-    def test_encrypt_assertion_contains_encrypted_data
-      sp_cert = Certificate.generate
-      args = { encrypt_assertion: true, sp_certificate: sp_cert }
-      root = Response.new(**args).document.root
+    def test_encrypt_with_contains_encrypted_data
+      root = Response.new(encrypt_with: Certificate.generate).document.root
       ed = root.elements["saml:EncryptedAssertion/xenc:EncryptedData"]
       assert_equal "EncryptedData", ed.name
     end

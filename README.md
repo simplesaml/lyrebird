@@ -55,11 +55,8 @@ response = Lyrebird::Response.build do |r|
   r.audience = "https://sp.example.com"
   r.authn_context = "urn:oasis:names:tc:SAML:2.0:ac:classes:Password"
   r.valid_for = 300 # seconds
-  r.idp_certificate = idp_cert
-  r.sp_certificate = sp_cert
-  r.sign_assertion = true
-  r.sign_response = true
-  r.encrypt_assertion = true
+  r.sign_with = idp_cert
+  r.encrypt_with = sp_cert
 
   r.attributes do |a|
     a.email = "user@example.com"
@@ -75,37 +72,24 @@ response.document # REXML::Document for inspection
 ```
 
 ### Signing
+Sign both the assertion and response with an IdP certificate:
 ```ruby
 idp_cert = Lyrebird::Certificate.generate
-
-response = Lyrebird::Response.build do |r|
-  r.idp_certificate = idp_cert
-  r.sign_assertion = true # Sign the assertion (default: false)
-  r.sign_response = true  # Sign the response (default: false)
-end
+response = Lyrebird::Response.build(sign_with: idp_cert)
 ```
 
 ### Encryption
 Encrypt assertions using the SP's certificate so only the SP can decrypt them:
 ```ruby
-idp_cert = Lyrebird::Certificate.generate
 sp_cert = Lyrebird::Certificate.generate  # In practice, provided by the SP
-
-response = Lyrebird::Response.build do |r|
-  r.idp_certificate = idp_cert
-  r.sp_certificate = sp_cert
-  r.encrypt_assertion = true # Encrypt the assertion (default: false)
-end
+response = Lyrebird::Response.build(encrypt_with: sp_cert)
 ```
 
-Signing and encryption can be combined. When both are enabled, the assertion is
-signed first, then encrypted (sign-then-encrypt):
+Signing and encryption can be combined:
 ```ruby
 response = Lyrebird::Response.build do |r|
-  r.idp_certificate = idp_cert
-  r.sp_certificate = sp_cert
-  r.sign_assertion = true
-  r.encrypt_assertion = true
+  r.sign_with = idp_cert
+  r.encrypt_with = sp_cert
 end
 ```
 

@@ -6,7 +6,7 @@ module Lyrebird
       config = OpenStruct.new(kwargs)
 
       config.define_singleton_method(:attributes) do |&block|
-        self[:attributes] = OpenStruct.new.tap(&block).to_h
+        self.attributes = OpenStruct.new.tap(&block).to_h
       end
 
       yield config if block_given?
@@ -17,21 +17,15 @@ module Lyrebird
       issuer: DEFAULTS.issuer,
       destination: DEFAULTS.recipient,
       in_response_to: DEFAULTS.in_response_to,
-      idp_certificate: nil,
-      sign_assertion: false,
-      sign_response: false,
-      encrypt_assertion: false,
-      sp_certificate: nil,
+      sign_with: nil,
+      encrypt_with: nil,
       **assertion_options
     )
       @issuer = issuer
       @destination = destination
       @in_response_to = in_response_to
-      @idp_certificate = idp_certificate
-      @sign_assertion = sign_assertion
-      @sign_response = sign_response
-      @encrypt_assertion = encrypt_assertion
-      @sp_certificate = sp_certificate
+      @sign_with = sign_with
+      @encrypt_with = encrypt_with
 
       @assertion = Assertion.new(
         issuer: issuer,
@@ -64,15 +58,15 @@ module Lyrebird
         r.add_element("saml:Issuer").text = @issuer
         r.add_element(status)
         r.add_element(assertion_element)
-        Signature.new(r, @idp_certificate).sign! if @sign_response
+        Signature.new(r, @sign_with).sign! if @sign_with
       end
     end
 
     def assertion_element
       element = @assertion.document.root
-      Signature.new(element, @idp_certificate).sign! if @sign_assertion
-      return element unless @encrypt_assertion
-      Encryption.new(element, @sp_certificate).encrypt
+      Signature.new(element, @sign_with).sign! if @sign_with
+      return element unless @encrypt_with
+      Encryption.new(element, @encrypt_with).encrypt
     end
 
     def status
