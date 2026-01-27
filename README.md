@@ -40,8 +40,11 @@ end
 Builds complete SAML responses with embedded assertions.
 
 ### Building a response
+Defaults produce an SP-initiated response. See
+[IdP-initiated SSO](#idp-initiated-sso) to omit `InResponseTo` and
+`Destination`.
 ```ruby
-# With defaults
+# With defaults (SP-initiated)
 response = Lyrebird::Response.build
 
 # With options
@@ -62,6 +65,18 @@ response = Lyrebird::Response.build do |r|
     a.email = "user@example.com"
     a.groups = ["admin", "users"]
   end
+end
+```
+
+### IdP-initiated SSO
+For unsolicited (IdP-initiated) flows where there is no AuthnRequest,
+set `in_response_to` and `destination` to `nil` to omit them from the
+XML entirely:
+```ruby
+response = Lyrebird::Response.build do |r|
+  r.in_response_to = nil
+  r.destination = nil
+  r.name_id = "user@example.com"
 end
 ```
 

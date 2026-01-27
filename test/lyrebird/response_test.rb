@@ -136,6 +136,16 @@ module Lyrebird
       assert_equal in_response_to, root.attributes["InResponseTo"]
     end
 
+    def test_destination_omitted_when_nil
+      root = Response.new(destination: nil).document.root
+      assert_nil root.attributes["Destination"]
+    end
+
+    def test_in_response_to_omitted_when_nil
+      root = Response.new(in_response_to: nil).document.root
+      assert_nil root.attributes["InResponseTo"]
+    end
+
     def test_issuer
       issuer = @root.elements["saml:Issuer"]
       assert_equal "Issuer", issuer.name

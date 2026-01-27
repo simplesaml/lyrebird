@@ -53,8 +53,8 @@ module Lyrebird
         r.add_attribute("ID", ID.generate)
         r.add_attribute("Version", "2.0")
         r.add_attribute("IssueInstant", Time.now.utc.iso8601)
-        r.add_attribute("Destination", @destination)
-        r.add_attribute("InResponseTo", @in_response_to)
+        r.add_attribute("Destination", @destination) if @destination
+        r.add_attribute("InResponseTo", @in_response_to) if @in_response_to
         r.add_element("saml:Issuer").text = @issuer
         r.add_element(status)
         r.add_element(assertion_element)

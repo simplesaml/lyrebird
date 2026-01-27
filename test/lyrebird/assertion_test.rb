@@ -131,6 +131,14 @@ module Lyrebird
       assert_equal in_response_to, scd.attributes["InResponseTo"]
     end
 
+    def test_in_response_to_omitted_when_nil
+      assertion = Assertion.new(in_response_to: nil).document
+      subject = assertion.root.elements["saml:Subject"]
+      sc = subject.elements["saml:SubjectConfirmation"]
+      scd = sc.elements["saml:SubjectConfirmationData"]
+      assert_nil scd.attributes["InResponseTo"]
+    end
+
     def test_valid_for_override
       valid_for = 600 # 10 minutes
       refute_equal valid_for, DEFAULTS.valid_for

@@ -62,7 +62,7 @@ module Lyrebird
         data = sc.add_element("saml:SubjectConfirmationData")
         data.add_attribute("NotOnOrAfter", @not_on_or_after.iso8601)
         data.add_attribute("Recipient", @recipient)
-        data.add_attribute("InResponseTo", @in_response_to)
+        data.add_attribute("InResponseTo", @in_response_to) if @in_response_to
       end
     end
 
