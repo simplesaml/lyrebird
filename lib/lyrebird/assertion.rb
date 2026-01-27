@@ -8,6 +8,7 @@ module Lyrebird
       name_id_format: DEFAULTS.name_id_format,
       recipient: DEFAULTS.recipient,
       in_response_to: DEFAULTS.in_response_to,
+      not_before: nil,
       valid_for: DEFAULTS.valid_for,
       audience: DEFAULTS.audience,
       authn_context: DEFAULTS.authn_context,
@@ -19,6 +20,7 @@ module Lyrebird
       @name_id_format = name_id_format
       @recipient = recipient
       @in_response_to = in_response_to
+      @not_before = not_before || @issue_instant
       @not_on_or_after = @issue_instant + valid_for
       @audience = audience
       @authn_context = authn_context
@@ -68,7 +70,7 @@ module Lyrebird
 
     def conditions
       REXML::Element.new("saml:Conditions").tap do |c|
-        c.add_attribute("NotBefore", @issue_instant.iso8601)
+        c.add_attribute("NotBefore", @not_before.iso8601)
         c.add_attribute("NotOnOrAfter", @not_on_or_after.iso8601)
         ar = c.add_element("saml:AudienceRestriction")
         ar.add_element("saml:Audience").text = @audience

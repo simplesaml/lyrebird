@@ -161,6 +161,13 @@ module Lyrebird
       assert_in_delta Time.now.to_i, not_before.to_i, 1
     end
 
+    def test_conditions_not_before_override
+      not_before = Time.now.utc - 60
+      assertion = Assertion.new(not_before: not_before).document
+      conditions = assertion.root.elements["saml:Conditions"]
+      assert_equal not_before.iso8601, conditions.attributes["NotBefore"]
+    end
+
     def test_conditions_not_on_or_after
       not_on_or_after = Time.iso8601(@conditions.attributes["NotOnOrAfter"])
       expected = Time.now.utc + DEFAULTS.valid_for

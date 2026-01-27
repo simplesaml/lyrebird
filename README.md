@@ -57,6 +57,7 @@ response = Lyrebird::Response.build do |r|
   r.recipient = "https://sp.example.com/acs"
   r.audience = "https://sp.example.com"
   r.authn_context = "urn:oasis:names:tc:SAML:2.0:ac:classes:Password"
+  r.not_before = Time.now.utc
   r.valid_for = 300 # seconds
   r.sign_with = idp_cert
   r.encrypt_with = sp_cert
