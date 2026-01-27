@@ -14,18 +14,19 @@ class SAMLTest < ActionDispatch::IntegrationTest
   test "consume creates a session" do
     user = users(:alice)
 
-    response = Lyrebird::Response.new(
-      issuer: "https://idp.example.com",
-      destination: saml_consume_url,
-      recipient: saml_consume_url,
-      audience: root_url,
-      name_id: user.email,
-      attributes: {
-        email: user.email,
-        first_name: user.first_name,
-        last_name: user.last_name
-      }
-    )
+    response = Lyrebird::Response.build do |r|
+      r.issuer = "https://idp.example.com"
+      r.destination = saml_consume_url
+      r.recipient = saml_consume_url
+      r.audience = root_url
+      r.name_id = user.email
+
+      r.attributes do |a|
+        a.email = user.email
+        a.first_name = user.first_name
+        a.last_name = user.last_name
+      end
+    end
 
     post saml_consume_path, params: { SAMLResponse: response.mimic }
 
@@ -36,28 +37,35 @@ end
 ```
 
 ## Response
-Creates complete SAML responses with embedded assertions.
+Builds complete SAML responses with embedded assertions.
 
-### Creating a response
+### Building a response
 ```ruby
 # With defaults
-response = Lyrebird::Response.new
+response = Lyrebird::Response.build
 
 # With options
-response = Lyrebird::Response.new(
-  issuer: "https://idp.example.com",
-  destination: "https://sp.example.com/acs",
-  in_response_to: "_request_id",
-  name_id: "user@example.com",
-  name_id_format: Lyrebird::NAMEID_EMAIL,
-  recipient: "https://sp.example.com/acs",
-  audience: "https://sp.example.com",
-  valid_for: 300, # seconds
-  attributes: {
-    email: "user@example.com",
-    groups: ["admin", "users"]
-  }
-)
+response = Lyrebird::Response.build do |r|
+  r.issuer = "https://idp.example.com"
+  r.destination = "https://sp.example.com/acs"
+  r.in_response_to = "_request_id"
+  r.name_id = "user@example.com"
+  r.name_id_format = Lyrebird::NAMEID_EMAIL
+  r.recipient = "https://sp.example.com/acs"
+  r.audience = "https://sp.example.com"
+  r.authn_context = "urn:oasis:names:tc:SAML:2.0:ac:classes:Password"
+  r.valid_for = 300 # seconds
+  r.idp_certificate = idp_cert
+  r.sp_certificate = sp_cert
+  r.sign_assertion = true
+  r.sign_response = true
+  r.encrypt_assertion = true
+
+  r.attributes do |a|
+    a.email = "user@example.com"
+    a.groups = ["admin", "users"]
+  end
+end
 ```
 
 ### Getting the encoded response
@@ -70,11 +78,11 @@ response.document # REXML::Document for inspection
 ```ruby
 idp_cert = Lyrebird::Certificate.generate
 
-response = Lyrebird::Response.new(
-  idp_certificate: idp_cert,
-  sign_assertion: true, # Sign the assertion (default: false)
-  sign_response: true   # Sign the response (default: false)
-)
+response = Lyrebird::Response.build do |r|
+  r.idp_certificate = idp_cert
+  r.sign_assertion = true # Sign the assertion (default: false)
+  r.sign_response = true  # Sign the response (default: false)
+end
 ```
 
 ### Encryption
@@ -83,22 +91,22 @@ Encrypt assertions using the SP's certificate so only the SP can decrypt them:
 idp_cert = Lyrebird::Certificate.generate
 sp_cert = Lyrebird::Certificate.generate  # In practice, provided by the SP
 
-response = Lyrebird::Response.new(
-  idp_certificate: idp_cert,
-  sp_certificate: sp_cert,
-  encrypt_assertion: true # Encrypt the assertion (default: false)
-)
+response = Lyrebird::Response.build do |r|
+  r.idp_certificate = idp_cert
+  r.sp_certificate = sp_cert
+  r.encrypt_assertion = true # Encrypt the assertion (default: false)
+end
 ```
 
 Signing and encryption can be combined. When both are enabled, the assertion is
 signed first, then encrypted (sign-then-encrypt):
 ```ruby
-response = Lyrebird::Response.new(
-  idp_certificate: idp_cert,
-  sp_certificate: sp_cert,
-  sign_assertion: true,
-  encrypt_assertion: true
-)
+response = Lyrebird::Response.build do |r|
+  r.idp_certificate = idp_cert
+  r.sp_certificate = sp_cert
+  r.sign_assertion = true
+  r.encrypt_assertion = true
+end
 ```
 
 ### NameID Formats
@@ -135,7 +143,7 @@ cert = Lyrebird::Certificate.generate(
   cn: "example.com",                  # Common Name
   o: "Acme",                          # Organization
   valid_for: 30,                      # Validity in days (default: 365)
-  valid_until: Time.new(2026, 12, 31) # Specific expiration (overrides valid_for)
+  valid_until: Time.new(2999, 12, 31) # Specific expiration (overrides valid_for)
 )
 ```
 
