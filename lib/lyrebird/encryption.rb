@@ -49,7 +49,7 @@ module Lyrebird
     end
 
     def encrypted_key_cipher_data
-      public_key = @certificate.certificate.public_key
+      public_key = @certificate.x509.public_key
       padding = OpenSSL::PKey::RSA::PKCS1_OAEP_PADDING
       encrypted_aes_key = public_key.public_encrypt(@aes_key, padding)
 

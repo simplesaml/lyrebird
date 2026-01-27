@@ -2,62 +2,62 @@
 
 module Lyrebird
   class Certificate
-    attr_reader :private_key, :certificate
+    attr_reader :key, :x509
 
     def self.generate(bits: 2048, **options)
       new(OpenSSL::PKey::RSA.new(bits), **options)
     end
 
-    def self.load(private_key_pem:, certificate_pem:)
-      private_key = OpenSSL::PKey::RSA.new(private_key_pem)
-      certificate = OpenSSL::X509::Certificate.new(certificate_pem)
-      new(private_key, certificate: certificate)
+    def self.load(key_pem:, x509_pem:)
+      key = OpenSSL::PKey::RSA.new(key_pem)
+      x509 = OpenSSL::X509::Certificate.new(x509_pem)
+      new(key, x509: x509)
     end
 
     def initialize(
-      private_key,
+      key,
       cn: nil,
       o: nil,
       valid_for: 365,
       valid_until: nil,
-      certificate: nil
+      x509: nil
     )
-      @private_key = private_key
+      @key = key
       @common_name = cn
       @organization = o
       @valid_for = valid_for
       @valid_until = valid_until
-      @certificate = certificate || build_certificate
+      @x509 = x509 || build_x509
     end
 
-    def private_key_pem
-      @private_key.to_pem
+    def key_pem
+      @key.to_pem
     end
 
-    def certificate_pem
-      @certificate.to_pem
+    def x509_pem
+      @x509.to_pem
     end
 
     def fingerprint
-      OpenSSL::Digest::SHA256.hexdigest(@certificate.to_der)
+      OpenSSL::Digest::SHA256.hexdigest(@x509.to_der)
     end
 
     def base64
-      Base64.strict_encode64(@certificate.to_der)
+      Base64.strict_encode64(@x509.to_der)
     end
 
     private
 
-    def build_certificate
+    def build_x509
       now = Time.now
 
       OpenSSL::X509::Certificate.new.tap do |c|
-        c.public_key = @private_key.public_key
+        c.public_key = @key.public_key
         c.subject = build_subject
         c.issuer = c.subject
         c.not_before = now
         c.not_after = @valid_until || now + (@valid_for * 86_400)
-        c.sign(@private_key, OpenSSL::Digest::SHA256.new)
+        c.sign(@key, OpenSSL::Digest::SHA256.new)
       end
     end
 

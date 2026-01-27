@@ -117,7 +117,7 @@ module Lyrebird
     def test_encrypted_key_can_be_decrypted
       cv = @ek.elements["xenc:CipherData/xenc:CipherValue"]
       encrypted_key = Base64.strict_decode64(cv.text)
-      private_key = @certificate.private_key
+      private_key = @certificate.key
       padding = OpenSSL::PKey::RSA::PKCS1_OAEP_PADDING
       decrypted_key = private_key.private_decrypt(encrypted_key, padding)
       assert_equal 32, decrypted_key.bytesize
