@@ -9,6 +9,78 @@ module Lyrebird
       @root = @response.document.root
     end
 
+    def test_build_with_defaults
+      response = Response.build
+      root = response.document.root
+      assert_equal DEFAULTS.issuer, root.elements["saml:Issuer"].text
+    end
+
+    def test_build_with_kwargs
+      issuer = "https://test.example.com"
+      refute_equal issuer, DEFAULTS.issuer
+      response = Response.build(issuer: issuer)
+      root = response.document.root
+      assert_equal issuer, root.elements["saml:Issuer"].text
+    end
+
+    def test_build_with_block
+      issuer = "https://test.example.com"
+      refute_equal issuer, DEFAULTS.issuer
+      response = Response.build { |r| r.issuer = issuer }
+      root = response.document.root
+      assert_equal issuer, root.elements["saml:Issuer"].text
+    end
+
+    def test_build_with_kwargs_and_block
+      issuer = "https://test.example.com"
+      email = "test@example.com"
+
+      refute_equal issuer, DEFAULTS.issuer
+      refute_equal email, DEFAULTS.name_id
+
+      response = Response.build(issuer: issuer) do |r|
+        r.name_id = email
+      end
+
+      root = response.document.root
+      assert_equal issuer, root.elements["saml:Issuer"].text
+      name_id = root.elements["saml:Assertion/saml:Subject/saml:NameID"]
+      assert_equal email, name_id.text
+    end
+
+    def test_build_with_attributes_block
+      email = "test@example.com"
+      role = "admin"
+
+      response = Response.build do |r|
+        r.attributes do |a|
+          a.email = email
+          a.role = role
+        end
+      end
+
+      root = response.document.root
+      statement = root.elements["saml:Assertion/saml:AttributeStatement"]
+      email_element = statement.elements["saml:Attribute[@Name='email']"]
+      role_element = statement.elements["saml:Attribute[@Name='role']"]
+
+      assert_equal email, email_element.elements["saml:AttributeValue"].text
+      assert_equal role, role_element.elements["saml:AttributeValue"].text
+    end
+
+    def test_build_with_attributes_hash
+      email = "user@example.com"
+
+      response = Response.build do |r|
+        r.attributes = { email: email }
+      end
+
+      root = response.document.root
+      statement = root.elements["saml:Assertion/saml:AttributeStatement"]
+      email_element = statement.elements["saml:Attribute[@Name='email']"]
+      assert_equal email, email_element.elements["saml:AttributeValue"].text
+    end
+
     def test_mimic_returns_base64
       encoded = @response.mimic
       decoded = Base64.strict_decode64(encoded)
@@ -192,5 +264,6 @@ module Lyrebird
       ed = root.elements["saml:EncryptedAssertion/xenc:EncryptedData"]
       assert_equal "EncryptedData", ed.name
     end
+
   end
 end

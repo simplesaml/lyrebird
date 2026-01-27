@@ -4,6 +4,11 @@ module Lyrebird
   class Response
     def self.build(**kwargs)
       config = OpenStruct.new(kwargs)
+
+      config.define_singleton_method(:attributes) do |&block|
+        self[:attributes] = OpenStruct.new.tap(&block).to_h
+      end
+
       yield config if block_given?
       new(**config.to_h)
     end
