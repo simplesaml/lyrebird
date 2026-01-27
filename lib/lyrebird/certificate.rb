@@ -49,6 +49,10 @@ module Lyrebird
       Base64.strict_encode64(@x509.to_der)
     end
 
+    def sign(data)
+      @key.sign("SHA256", data)
+    end
+
     private
 
     def build_x509
