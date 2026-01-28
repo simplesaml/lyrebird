@@ -39,25 +39,33 @@ module Lyrebird
     end
 
     def document
-      REXML::Document.new.tap do |d|
-        d.add_element(root)
+      Nokogiri::XML::Document.new.tap do |doc|
+        doc.root = root(doc)
       end
     end
 
     private
 
-    def root
-      REXML::Element.new("samlp:Response").tap do |r|
-        r.add_namespace("samlp", SAML_PROTOCOL_NS)
-        r.add_namespace("saml", SAML_ASSERTION_NS)
-        r.add_attribute("ID", ID.generate)
-        r.add_attribute("Version", "2.0")
-        r.add_attribute("IssueInstant", Time.now.utc.iso8601)
-        r.add_attribute("Destination", @destination) if @destination
-        r.add_attribute("InResponseTo", @in_response_to) if @in_response_to
-        r.add_element("saml:Issuer").text = @issuer
-        r.add_element(status)
-        r.add_element(assertion_element)
+    def root(doc)
+      doc.create_element("Response").tap do |r|
+        samlp = r.add_namespace_definition("samlp", SAML_PROTOCOL_NS)
+        saml = r.add_namespace_definition("saml", SAML_ASSERTION_NS)
+
+        r.namespace = samlp
+        r["ID"] = ID.generate
+        r["Version"] = "2.0"
+        r["IssueInstant"] = Time.now.utc.iso8601
+        r["Destination"] = @destination if @destination
+        r["InResponseTo"] = @in_response_to if @in_response_to
+
+        issuer = doc.create_element("Issuer").tap do |i|
+          i.namespace = saml
+          i.content = @issuer
+        end
+
+        r.add_child(issuer)
+        r.add_child(status(doc, samlp))
+        r.add_child(assertion_element)
         Signature.new(r, @sign_with).sign! if @sign_with
       end
     end
@@ -66,13 +74,20 @@ module Lyrebird
       element = @assertion.document.root
       Signature.new(element, @sign_with).sign! if @sign_with
       return element unless @encrypt_with
+
       Encryption.new(element, @encrypt_with).encrypt
     end
 
-    def status
-      REXML::Element.new("samlp:Status").tap do |s|
-        sc = s.add_element("samlp:StatusCode")
-        sc.add_attribute("Value", STATUS_SUCCESS)
+    def status(doc, ns)
+      doc.create_element("Status").tap do |s|
+        s.namespace = ns
+
+        status_code = doc.create_element("StatusCode").tap do |sc|
+          sc.namespace = ns
+          sc["Value"] = STATUS_SUCCESS
+        end
+
+        s.add_child(status_code)
       end
     end
   end

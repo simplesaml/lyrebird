@@ -4,6 +4,13 @@ require "test_helper"
 
 module Lyrebird
   class ResponseTest < Minitest::Test
+    NAMESPACES = {
+      "saml" => SAML_ASSERTION_NS,
+      "samlp" => SAML_PROTOCOL_NS,
+      "ds" => XMLDSIG_NS,
+      "xenc" => XMLENC_NS
+    }.freeze
+
     def setup
       @response = Response.new
       @root = @response.document.root
@@ -12,7 +19,8 @@ module Lyrebird
     def test_build_with_defaults
       response = Response.build
       root = response.document.root
-      assert_equal DEFAULTS.issuer, root.elements["saml:Issuer"].text
+      issuer = root.at_xpath("saml:Issuer", NAMESPACES)
+      assert_equal DEFAULTS.issuer, issuer.text
     end
 
     def test_build_with_kwargs
@@ -20,7 +28,7 @@ module Lyrebird
       refute_equal issuer, DEFAULTS.issuer
       response = Response.build(issuer: issuer)
       root = response.document.root
-      assert_equal issuer, root.elements["saml:Issuer"].text
+      assert_equal issuer, root.at_xpath("saml:Issuer", NAMESPACES).text
     end
 
     def test_build_with_block
@@ -28,7 +36,7 @@ module Lyrebird
       refute_equal issuer, DEFAULTS.issuer
       response = Response.build { |r| r.issuer = issuer }
       root = response.document.root
-      assert_equal issuer, root.elements["saml:Issuer"].text
+      assert_equal issuer, root.at_xpath("saml:Issuer", NAMESPACES).text
     end
 
     def test_build_with_kwargs_and_block
@@ -43,9 +51,9 @@ module Lyrebird
       end
 
       root = response.document.root
-      assert_equal issuer, root.elements["saml:Issuer"].text
-      name_id = root.elements["saml:Assertion/saml:Subject/saml:NameID"]
-      assert_equal email, name_id.text
+      assert_equal issuer, root.at_xpath("saml:Issuer", NAMESPACES).text
+      xpath = "saml:Assertion/saml:Subject/saml:NameID"
+      assert_equal email, root.at_xpath(xpath, NAMESPACES).text
     end
 
     def test_build_with_attributes_block
@@ -60,12 +68,15 @@ module Lyrebird
       end
 
       root = response.document.root
-      statement = root.elements["saml:Assertion/saml:AttributeStatement"]
-      email_element = statement.elements["saml:Attribute[@Name='email']"]
-      role_element = statement.elements["saml:Attribute[@Name='role']"]
+      statement_xpath = "saml:Assertion/saml:AttributeStatement"
+      statement = root.at_xpath(statement_xpath, NAMESPACES)
+      email_xpath = "saml:Attribute[@Name='email']/saml:AttributeValue"
+      role_xpath = "saml:Attribute[@Name='role']/saml:AttributeValue"
+      email_element = statement.at_xpath(email_xpath, NAMESPACES)
+      role_element = statement.at_xpath(role_xpath, NAMESPACES)
 
-      assert_equal email, email_element.elements["saml:AttributeValue"].text
-      assert_equal role, role_element.elements["saml:AttributeValue"].text
+      assert_equal email, email_element.text
+      assert_equal role, role_element.text
     end
 
     def test_build_with_attributes_hash
@@ -76,9 +87,10 @@ module Lyrebird
       end
 
       root = response.document.root
-      statement = root.elements["saml:Assertion/saml:AttributeStatement"]
-      email_element = statement.elements["saml:Attribute[@Name='email']"]
-      assert_equal email, email_element.elements["saml:AttributeValue"].text
+      statement_xpath = "saml:Assertion/saml:AttributeStatement"
+      attr_xpath = "saml:Attribute[@Name='email']/saml:AttributeValue"
+      statement = root.at_xpath(statement_xpath, NAMESPACES)
+      assert_equal email, statement.at_xpath(attr_xpath, NAMESPACES).text
     end
 
     def test_mimic_returns_base64
@@ -90,66 +102,66 @@ module Lyrebird
 
     def test_root_name
       assert_equal "Response", @root.name
-      assert_equal "samlp", @root.prefix
+      assert_equal "samlp", @root.namespace.prefix
     end
 
     def test_root_namespace
-      assert_equal SAML_PROTOCOL_NS, @root.namespace
+      assert_equal SAML_PROTOCOL_NS, @root.namespace.href
     end
 
     def test_saml_namespace_declared
-      assert_equal SAML_ASSERTION_NS, @root.namespace("saml")
+      assert_equal SAML_ASSERTION_NS, @root.namespaces["xmlns:saml"]
     end
 
     def test_root_id
-      assert @root.attributes["ID"].start_with?("_")
+      assert @root["ID"].start_with?("_")
     end
 
     def test_root_version
-      assert_equal "2.0", @root.attributes["Version"]
+      assert_equal "2.0", @root["Version"]
     end
 
     def test_root_issue_instant
-      instant = Time.iso8601(@root.attributes["IssueInstant"])
+      instant = Time.iso8601(@root["IssueInstant"])
       assert_in_delta Time.now.to_i, instant.to_i, 1
     end
 
     def test_destination_default
-      assert_equal DEFAULTS.recipient, @root.attributes["Destination"]
+      assert_equal DEFAULTS.recipient, @root["Destination"]
     end
 
     def test_destination_override
       destination = "https://test.example.com/acs"
       refute_equal destination, DEFAULTS.recipient
       root = Response.new(destination: destination).document.root
-      assert_equal destination, root.attributes["Destination"]
+      assert_equal destination, root["Destination"]
     end
 
     def test_in_response_to_default
-      assert_equal DEFAULTS.in_response_to, @root.attributes["InResponseTo"]
+      assert_equal DEFAULTS.in_response_to, @root["InResponseTo"]
     end
 
     def test_in_response_to_override
       in_response_to = "_test_request"
       refute_equal in_response_to, DEFAULTS.in_response_to
       root = Response.new(in_response_to: in_response_to).document.root
-      assert_equal in_response_to, root.attributes["InResponseTo"]
+      assert_equal in_response_to, root["InResponseTo"]
     end
 
     def test_destination_omitted_when_nil
       root = Response.new(destination: nil).document.root
-      assert_nil root.attributes["Destination"]
+      assert_nil root["Destination"]
     end
 
     def test_in_response_to_omitted_when_nil
       root = Response.new(in_response_to: nil).document.root
-      assert_nil root.attributes["InResponseTo"]
+      assert_nil root["InResponseTo"]
     end
 
     def test_issuer
-      issuer = @root.elements["saml:Issuer"]
+      issuer = @root.at_xpath("saml:Issuer", NAMESPACES)
       assert_equal "Issuer", issuer.name
-      assert_equal "saml", issuer.prefix
+      assert_equal "saml", issuer.namespace.prefix
       assert_equal DEFAULTS.issuer, issuer.text
     end
 
@@ -157,40 +169,39 @@ module Lyrebird
       url = "https://test.idp.example.com"
       refute_equal url, DEFAULTS.issuer
       root = Response.new(issuer: url).document.root
-      issuer = root.elements["saml:Issuer"]
+      issuer = root.at_xpath("saml:Issuer", NAMESPACES)
       assert_equal url, issuer.text
     end
 
     def test_status
-      status = @root.elements["samlp:Status"]
+      status = @root.at_xpath("samlp:Status", NAMESPACES)
       assert_equal "Status", status.name
-      assert_equal "samlp", status.prefix
+      assert_equal "samlp", status.namespace.prefix
     end
 
     def test_status_code
-      status_code = @root.elements["samlp:Status/samlp:StatusCode"]
+      status_code = @root.at_xpath("samlp:Status/samlp:StatusCode", NAMESPACES)
       assert_equal "StatusCode", status_code.name
-      assert_equal "samlp", status_code.prefix
-      assert_equal STATUS_SUCCESS, status_code.attributes["Value"]
+      assert_equal "samlp", status_code.namespace.prefix
+      assert_equal STATUS_SUCCESS, status_code["Value"]
     end
 
     def test_assertion_embedded
-      assertion = @root.elements["saml:Assertion"]
+      assertion = @root.at_xpath("saml:Assertion", NAMESPACES)
       assert_equal "Assertion", assertion.name
-      assert_equal "saml", assertion.prefix
+      assert_equal "saml", assertion.namespace.prefix
     end
 
     def test_assertion_has_id
-      assertion = @root.elements["saml:Assertion"]
-      assert assertion.attributes["ID"].start_with?("_")
+      assertion = @root.at_xpath("saml:Assertion", NAMESPACES)
+      assert assertion["ID"].start_with?("_")
     end
 
     def test_assertion_inherits_issuer
       url = "https://test.idp.example.com"
       refute_equal url, DEFAULTS.issuer
       root = Response.new(issuer: url).document.root
-      assertion = root.elements["saml:Assertion"]
-      issuer = assertion.elements["saml:Issuer"]
+      issuer = root.at_xpath("saml:Assertion/saml:Issuer", NAMESPACES)
       assert_equal url, issuer.text
     end
 
@@ -198,43 +209,42 @@ module Lyrebird
       email = "test@example.com"
       refute_equal email, DEFAULTS.name_id
       root = Response.new(name_id: email).document.root
-      assertion = root.elements["saml:Assertion"]
-      name_id = assertion.elements["saml:Subject/saml:NameID"]
-      assert_equal email, name_id.text
+      xpath = "saml:Assertion/saml:Subject/saml:NameID"
+      assert_equal email, root.at_xpath(xpath, NAMESPACES).text
     end
 
     def test_unsigned_by_default
-      assert_nil @root.elements["ds:Signature"]
-      assert_nil @root.elements["saml:Assertion/ds:Signature"]
+      assert_nil @root.at_xpath("ds:Signature", NAMESPACES)
+      assert_nil @root.at_xpath("saml:Assertion/ds:Signature", NAMESPACES)
     end
 
     def test_sign_with_signs_response_and_assertion
       root = Response.new(sign_with: Certificate.build).document.root
-      refute_nil root.elements["ds:Signature"]
-      refute_nil root.elements["saml:Assertion/ds:Signature"]
+      refute_nil root.at_xpath("ds:Signature", NAMESPACES)
+      refute_nil root.at_xpath("saml:Assertion/ds:Signature", NAMESPACES)
     end
 
     def test_not_encrypted_by_default
-      assert_nil @root.elements["saml:EncryptedAssertion"]
+      assert_nil @root.at_xpath("saml:EncryptedAssertion", NAMESPACES)
     end
 
     def test_encrypt_with_creates_encrypted_assertion
       root = Response.new(encrypt_with: Certificate.build).document.root
-      ea = root.elements["saml:EncryptedAssertion"]
+      ea = root.at_xpath("saml:EncryptedAssertion", NAMESPACES)
       assert_equal "EncryptedAssertion", ea.name
-      assert_equal "saml", ea.prefix
+      assert_equal "saml", ea.namespace.prefix
     end
 
     def test_encrypt_with_removes_plain_assertion
       root = Response.new(encrypt_with: Certificate.build).document.root
-      assert_nil root.elements["saml:Assertion"]
+      assert_nil root.at_xpath("saml:Assertion", NAMESPACES)
     end
 
     def test_encrypt_with_contains_encrypted_data
       root = Response.new(encrypt_with: Certificate.build).document.root
-      ed = root.elements["saml:EncryptedAssertion/xenc:EncryptedData"]
+      xpath = "saml:EncryptedAssertion/xenc:EncryptedData"
+      ed = root.at_xpath(xpath, NAMESPACES)
       assert_equal "EncryptedData", ed.name
     end
-
   end
 end
