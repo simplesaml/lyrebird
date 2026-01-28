@@ -60,12 +60,11 @@ module Lyrebird
         r["Destination"] = @destination if @destination
         r["InResponseTo"] = @in_response_to if @in_response_to
 
-        issuer = doc.create_element("Issuer").tap do |i|
+        r.add_child(doc.create_element("Issuer")).tap do |i|
           i.namespace = @saml
           i.content = @issuer
         end
 
-        r.add_child(issuer)
         r.add_child(build_status(doc))
         r.add_child(build_assertion_element(doc))
       end
@@ -97,12 +96,10 @@ module Lyrebird
       doc.create_element("Status").tap do |s|
         s.namespace = @samlp
 
-        status_code = doc.create_element("StatusCode").tap do |sc|
+        s.add_child(doc.create_element("StatusCode")).tap do |sc|
           sc.namespace = @samlp
           sc["Value"] = STATUS_SUCCESS
         end
-
-        s.add_child(status_code)
       end
     end
   end
