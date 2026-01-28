@@ -28,75 +28,127 @@ module Lyrebird
     end
 
     def document
-      REXML::Document.new.tap do |d|
-        d.add_element(root)
+      Nokogiri::XML::Document.new.tap do |doc|
+        doc.root = root(doc)
       end
     end
 
     private
 
-    def root
-      REXML::Element.new("saml:Assertion").tap do |r|
-        r.add_namespace("saml", SAML_ASSERTION_NS)
-        r.add_attribute("ID", ID.generate)
-        r.add_attribute("Version", "2.0")
-        r.add_attribute("IssueInstant", @issue_instant.iso8601)
-        r.add_element("saml:Issuer").text = @issuer
-        r.add_element(subject)
-        r.add_element(conditions)
-        r.add_element(authn_statement)
-        r.add_element(attribute_statement) if @attributes.any?
+    def root(doc)
+      doc.create_element("Assertion").tap do |a|
+        ns = a.add_namespace_definition("saml", SAML_ASSERTION_NS)
+
+        a.namespace = ns
+        a["ID"] = ID.generate
+        a["Version"] = "2.0"
+        a["IssueInstant"] = @issue_instant.iso8601
+
+        issuer = doc.create_element("Issuer").tap do |i|
+          i.namespace = ns
+          i.content = @issuer
+        end
+
+        a.add_child(issuer)
+        a.add_child(subject(doc, ns))
+        a.add_child(conditions(doc, ns))
+        a.add_child(authn_statement(doc, ns))
+        a.add_child(attribute_statement(doc, ns)) if @attributes.any?
       end
     end
 
-    def subject
-      REXML::Element.new("saml:Subject").tap do |s|
-        name_id = s.add_element("saml:NameID")
-        name_id.add_attribute("Format", @name_id_format)
-        name_id.text = @name_id
-        s.add_element(subject_confirmation)
+    def subject(doc, ns)
+      doc.create_element("Subject").tap do |s|
+        s.namespace = ns
+
+        name_id = doc.create_element("NameID").tap do |nid|
+          nid.namespace = ns
+          nid["Format"] = @name_id_format
+          nid.content = @name_id
+        end
+
+        s.add_child(name_id)
+        s.add_child(subject_confirmation(doc, ns))
       end
     end
 
-    def subject_confirmation
-      REXML::Element.new("saml:SubjectConfirmation").tap do |sc|
-        sc.add_attribute("Method", CM_BEARER)
-        data = sc.add_element("saml:SubjectConfirmationData")
-        data.add_attribute("NotOnOrAfter", @not_on_or_after.iso8601)
-        data.add_attribute("Recipient", @recipient)
-        data.add_attribute("InResponseTo", @in_response_to) if @in_response_to
+    def subject_confirmation(doc, ns)
+      doc.create_element("SubjectConfirmation").tap do |sc|
+        sc.namespace = ns
+        sc["Method"] = CM_BEARER
+
+        data = doc.create_element("SubjectConfirmationData").tap do |d|
+          d.namespace = ns
+          d["NotOnOrAfter"] = @not_on_or_after.iso8601
+          d["Recipient"] = @recipient
+          d["InResponseTo"] = @in_response_to if @in_response_to
+        end
+
+        sc.add_child(data)
       end
     end
 
-    def conditions
-      REXML::Element.new("saml:Conditions").tap do |c|
-        c.add_attribute("NotBefore", @not_before.iso8601)
-        c.add_attribute("NotOnOrAfter", @not_on_or_after.iso8601)
-        ar = c.add_element("saml:AudienceRestriction")
-        ar.add_element("saml:Audience").text = @audience
+    def conditions(doc, ns)
+      doc.create_element("Conditions").tap do |c|
+        c.namespace = ns
+        c["NotBefore"] = @not_before.iso8601
+        c["NotOnOrAfter"] = @not_on_or_after.iso8601
+
+        audience = doc.create_element("Audience").tap do |a|
+          a.namespace = ns
+          a.content = @audience
+        end
+
+        restriction = doc.create_element("AudienceRestriction").tap do |ar|
+          ar.namespace = ns
+          ar.add_child(audience)
+        end
+
+        c.add_child(restriction)
       end
     end
 
-    def authn_statement
-      REXML::Element.new("saml:AuthnStatement").tap do |as|
-        as.add_attribute("AuthnInstant", @issue_instant.iso8601)
-        as.add_attribute("SessionIndex", ID.generate)
-        ac = as.add_element("saml:AuthnContext")
-        cr = ac.add_element("saml:AuthnContextClassRef")
-        cr.text = @authn_context
+    def authn_statement(doc, ns)
+      doc.create_element("AuthnStatement").tap do |as|
+        as.namespace = ns
+        as["AuthnInstant"] = @issue_instant.iso8601
+        as["SessionIndex"] = ID.generate
+
+        class_ref = doc.create_element("AuthnContextClassRef").tap do |cr|
+          cr.namespace = ns
+          cr.content = @authn_context
+        end
+
+        context = doc.create_element("AuthnContext").tap do |ac|
+          ac.namespace = ns
+          ac.add_child(class_ref)
+        end
+
+        as.add_child(context)
       end
     end
 
-    def attribute_statement
-      REXML::Element.new("saml:AttributeStatement").tap do |as|
+    def attribute_statement(doc, ns)
+      doc.create_element("AttributeStatement").tap do |as|
+        as.namespace = ns
+
         @attributes.each do |name, values|
-          a = as.add_element("saml:Attribute")
-          a.add_attribute("Name", name)
-          a.add_attribute("NameFormat", ATTR_NAME_FORMAT)
+          attribute = doc.create_element("Attribute").tap do |a|
+            a.namespace = ns
+            a["Name"] = name
+            a["NameFormat"] = ATTR_NAME_FORMAT
 
-          Array(values).each do |value|
-            a.add_element("saml:AttributeValue").text = value
+            Array(values).each do |value|
+              attr_value = doc.create_element("AttributeValue").tap do |av|
+                av.namespace = ns
+                av.content = value
+              end
+
+              a.add_child(attr_value)
+            end
           end
+
+          as.add_child(attribute)
         end
       end
     end
