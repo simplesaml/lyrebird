@@ -90,14 +90,14 @@ response.document # REXML::Document for inspection
 ### Signing
 Sign both the assertion and response with an IdP certificate:
 ```ruby
-idp_cert = Lyrebird::Certificate.generate
+idp_cert = Lyrebird::Certificate.build
 response = Lyrebird::Response.build(sign_with: idp_cert)
 ```
 
 ### Encryption
 Encrypt assertions using the SP's certificate so only the SP can decrypt them:
 ```ruby
-sp_cert = Lyrebird::Certificate.generate  # In practice, provided by the SP
+sp_cert = Lyrebird::Certificate.build
 response = Lyrebird::Response.build(encrypt_with: sp_cert)
 ```
 
@@ -132,35 +132,36 @@ Lyrebird::DEFAULTS.attributes = { role: "user" }
 ## Certificate
 Generates and manages X.509 certificates for signing SAML responses.
 
-### Generating a new certificate
+### Building a certificate
 ```ruby
 # With defaults
-cert = Lyrebird::Certificate.generate
+cert = Lyrebird::Certificate.build
 
 # With options
-cert = Lyrebird::Certificate.generate(
-  bits: 4096,                         # RSA key size (default: 2048)
-  cn: "example.com",                  # Common Name
-  o: "Acme",                          # Organization
-  valid_for: 30,                      # Validity in days (default: 365)
-  valid_until: Time.new(2999, 12, 31) # Specific expiration (overrides valid_for)
-)
+cert = Lyrebird::Certificate.build do |c|
+  c.bits = 4096                           # RSA key size (default: 2048)
+  c.cn = "example.com"                    # Common Name
+  c.o = "Acme"                            # Organization
+  c.valid_for = 30                        # Days (default: 365)
+  c.valid_until = Time.new(2999, 12, 31)  # Overrides valid_for
+end
 ```
 
 ### Loading an existing certificate
 ```ruby
 cert = Lyrebird::Certificate.load(
-  private_key_pem: File.read("private_key.pem"),
-  certificate_pem: File.read("certificate.pem")
+  key_pem: File.read("private_key.pem"),
+  x509_pem: File.read("certificate.pem")
 )
 ```
 
-### Exporting
+### Using a certificate
 ```ruby
-cert.private_key     # OpenSSL::PKey::RSA object
-cert.certificate     # OpenSSL::X509::Certificate object
-cert.private_key_pem # PEM-encoded private key
-cert.certificate_pem # PEM-encoded certificate
-cert.base64          # Base64-encoded certificate (for SAML metadata)
-cert.fingerprint     # SHA256 fingerprint
+cert.key          # OpenSSL::PKey::RSA private key
+cert.x509         # OpenSSL::X509::Certificate object
+cert.key_pem      # PEM-encoded private key
+cert.x509_pem     # PEM-encoded certificate
+cert.sign(data)   # Sign data with RSA-SHA256
+cert.base64       # Base64-encoded certificate (for SAML metadata)
+cert.fingerprint  # SHA256 fingerprint
 ```
