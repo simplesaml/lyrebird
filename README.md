@@ -84,7 +84,7 @@ end
 ### Getting the encoded response
 ```ruby
 response.mimic    # Base64-encoded SAML response (for POST binding)
-response.document # REXML::Document for inspection
+response.document # Nokogiri::XML::Document for inspection
 ```
 
 ### Signing

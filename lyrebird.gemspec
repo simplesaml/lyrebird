@@ -20,7 +20,6 @@ Gem::Specification.new do |spec|
   spec.add_dependency "base64"
   spec.add_dependency "nokogiri"
   spec.add_dependency "ostruct"
-  spec.add_dependency "rexml"
 
   spec.add_development_dependency "minitest"
   spec.add_development_dependency "rake"

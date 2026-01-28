@@ -4,7 +4,6 @@ require "base64"
 require "nokogiri"
 require "openssl"
 require "ostruct"
-require "rexml"
 require "securerandom"
 require "time"
 
