@@ -44,12 +44,11 @@ module Lyrebird
         a["Version"] = "2.0"
         a["IssueInstant"] = @issue_instant.iso8601
 
-        issuer = doc.create_element("Issuer").tap do |i|
+        a.add_child(doc.create_element("Issuer")).tap do |i|
           i.namespace = ns
           i.content = @issuer
         end
 
-        a.add_child(issuer)
         a.add_child(subject(doc, ns))
         a.add_child(conditions(doc, ns))
         a.add_child(authn_statement(doc, ns))
@@ -61,13 +60,12 @@ module Lyrebird
       doc.create_element("Subject").tap do |s|
         s.namespace = ns
 
-        name_id = doc.create_element("NameID").tap do |nid|
+        s.add_child(doc.create_element("NameID")).tap do |nid|
           nid.namespace = ns
           nid["Format"] = @name_id_format
           nid.content = @name_id
         end
 
-        s.add_child(name_id)
         s.add_child(subject_confirmation(doc, ns))
       end
     end
@@ -77,14 +75,12 @@ module Lyrebird
         sc.namespace = ns
         sc["Method"] = CM_BEARER
 
-        data = doc.create_element("SubjectConfirmationData").tap do |d|
+        sc.add_child(doc.create_element("SubjectConfirmationData")).tap do |d|
           d.namespace = ns
           d["NotOnOrAfter"] = @not_on_or_after.iso8601
           d["Recipient"] = @recipient
           d["InResponseTo"] = @in_response_to if @in_response_to
         end
-
-        sc.add_child(data)
       end
     end
 
@@ -94,17 +90,13 @@ module Lyrebird
         c["NotBefore"] = @not_before.iso8601
         c["NotOnOrAfter"] = @not_on_or_after.iso8601
 
-        audience = doc.create_element("Audience").tap do |a|
-          a.namespace = ns
-          a.content = @audience
-        end
-
-        restriction = doc.create_element("AudienceRestriction").tap do |ar|
+        c.add_child(doc.create_element("AudienceRestriction")).tap do |ar|
           ar.namespace = ns
-          ar.add_child(audience)
+          ar.add_child(doc.create_element("Audience")).tap do |a|
+            a.namespace = ns
+            a.content = @audience
+          end
         end
-
-        c.add_child(restriction)
       end
     end
 
@@ -114,17 +106,13 @@ module Lyrebird
         as["AuthnInstant"] = @issue_instant.iso8601
         as["SessionIndex"] = ID.generate
 
-        class_ref = doc.create_element("AuthnContextClassRef").tap do |cr|
-          cr.namespace = ns
-          cr.content = @authn_context
-        end
-
-        context = doc.create_element("AuthnContext").tap do |ac|
+        as.add_child(doc.create_element("AuthnContext")).tap do |ac|
           ac.namespace = ns
-          ac.add_child(class_ref)
+          ac.add_child(doc.create_element("AuthnContextClassRef")).tap do |cr|
+            cr.namespace = ns
+            cr.content = @authn_context
+          end
         end
-
-        as.add_child(context)
       end
     end
 
@@ -133,22 +121,18 @@ module Lyrebird
         as.namespace = ns
 
         @attributes.each do |name, values|
-          attribute = doc.create_element("Attribute").tap do |a|
+          as.add_child(doc.create_element("Attribute")).tap do |a|
             a.namespace = ns
             a["Name"] = name
             a["NameFormat"] = ATTR_NAME_FORMAT
 
             Array(values).each do |value|
-              attr_value = doc.create_element("AttributeValue").tap do |av|
+              a.add_child(doc.create_element("AttributeValue")).tap do |av|
                 av.namespace = ns
                 av.content = value
               end
-
-              a.add_child(attr_value)
             end
           end
-
-          as.add_child(attribute)
         end
       end
     end
