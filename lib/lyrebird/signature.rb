@@ -35,18 +35,16 @@ module Lyrebird
         si.add_namespace_definition("ds", XMLDSIG_NS)
         si.namespace = @ds
 
-        c14n_method = @doc.create_element("CanonicalizationMethod").tap do |cm|
+        si.add_child(@doc.create_element("CanonicalizationMethod")).tap do |cm|
           cm.namespace = @ds
           cm["Algorithm"] = EXC_C14N
         end
 
-        sig_method = @doc.create_element("SignatureMethod").tap do |sm|
+        si.add_child(@doc.create_element("SignatureMethod")).tap do |sm|
           sm.namespace = @ds
           sm["Algorithm"] = RSA_SHA256
         end
 
-        si.add_child(c14n_method)
-        si.add_child(sig_method)
         si.add_child(build_reference)
       end
     end
@@ -73,18 +71,14 @@ module Lyrebird
       @doc.create_element("KeyInfo").tap do |ki|
         ki.namespace = @ds
 
-        x509_data = @doc.create_element("X509Data").tap do |xd|
+        ki.add_child(@doc.create_element("X509Data")).tap do |xd|
           xd.namespace = @ds
 
-          x509_cert = @doc.create_element("X509Certificate").tap do |xc|
+          xd.add_child(@doc.create_element("X509Certificate")).tap do |xc|
             xc.namespace = @ds
             xc.content = @certificate.base64
           end
-
-          xd.add_child(x509_cert)
         end
-
-        ki.add_child(x509_data)
       end
     end
 
@@ -95,18 +89,15 @@ module Lyrebird
 
         ref.add_child(build_transforms)
 
-        digest_method = @doc.create_element("DigestMethod").tap do |dm|
+        ref.add_child(@doc.create_element("DigestMethod")).tap do |dm|
           dm.namespace = @ds
           dm["Algorithm"] = SHA256_DIGEST
         end
 
-        digest_value = @doc.create_element("DigestValue").tap do |dv|
+        ref.add_child(@doc.create_element("DigestValue")).tap do |dv|
           dv.namespace = @ds
           dv.content = compute_digest
         end
-
-        ref.add_child(digest_method)
-        ref.add_child(digest_value)
       end
     end
 
@@ -114,18 +105,15 @@ module Lyrebird
       @doc.create_element("Transforms").tap do |t|
         t.namespace = @ds
 
-        enveloped = @doc.create_element("Transform").tap do |tr|
+        t.add_child(@doc.create_element("Transform")).tap do |tr|
           tr.namespace = @ds
           tr["Algorithm"] = ENVELOPED_SIG
         end
 
-        c14n = @doc.create_element("Transform").tap do |tr|
+        t.add_child(@doc.create_element("Transform")).tap do |tr|
           tr.namespace = @ds
           tr["Algorithm"] = EXC_C14N
         end
-
-        t.add_child(enveloped)
-        t.add_child(c14n)
       end
     end
 
