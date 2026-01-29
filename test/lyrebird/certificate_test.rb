@@ -5,7 +5,13 @@ require "test_helper"
 module Lyrebird
   class CertificateTest < Minitest::Test
     def setup
-      @certificate = Certificate.build
+      unless defined?(@@shared)
+        @@shared = Certificate.build
+        @@created_at = Time.now.utc
+      end
+
+      @certificate = @@shared
+      @created_at = @@created_at
     end
 
     def test_key_is_rsa
@@ -26,12 +32,12 @@ module Lyrebird
     end
 
     def test_x509_not_before_is_now
-      assert_in_delta Time.now, @certificate.x509.not_before, 1
+      assert_in_delta @created_at, @certificate.x509.not_before, 1
     end
 
     def test_x509_not_after_is_one_year_from_now
-      one_year = 365 * 24 * 60 * 60
-      assert_in_delta Time.now + one_year, @certificate.x509.not_after, 1
+      expected = @created_at + (365 * 24 * 60 * 60)
+      assert_in_delta expected, @certificate.x509.not_after, 1
     end
 
     def test_x509_is_signed
@@ -41,18 +47,20 @@ module Lyrebird
     def test_sign
       data = "test"
       signature = @certificate.sign(data)
-      assert @certificate.x509.public_key.verify("SHA256", signature, data)
+      public_key = @certificate.x509.public_key
+      assert public_key.verify("SHA256", signature, data)
     end
 
     def test_x509_with_custom_subject
       certificate = Certificate.build(cn: "Test", o: "Acme")
-      assert_equal "/CN=Test/O=Acme", certificate.x509.subject.to_s
+      subject = certificate.x509.subject.to_s
+      assert_equal "/CN=Test/O=Acme", subject
     end
 
     def test_x509_with_custom_valid_for
       certificate = Certificate.build(valid_for: 30).x509
-      thirty_days = 30 * 24 * 60 * 60
-      assert_in_delta Time.now + thirty_days, certificate.not_after, 1
+      expected = Time.now.utc + (30 * 24 * 60 * 60)
+      assert_in_delta expected, certificate.not_after, 1
     end
 
     def test_x509_with_valid_until
@@ -87,16 +95,17 @@ module Lyrebird
         c.o = "Org"
       end
 
-      assert_equal "/CN=Name/O=Org", certificate.x509.subject.to_s
+      subject = certificate.x509.subject.to_s
+      assert_equal "/CN=Name/O=Org", subject
     end
 
     def test_load
-      certificate = Certificate.load(
+      loaded = Certificate.load(
         key_pem: @certificate.key_pem,
         x509_pem: @certificate.x509_pem,
       )
 
-      assert_equal @certificate.fingerprint, certificate.fingerprint
+      assert_equal @certificate.fingerprint, loaded.fingerprint
     end
   end
 end
