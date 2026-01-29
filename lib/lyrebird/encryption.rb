@@ -29,12 +29,11 @@ module Lyrebird
         ed.namespace = @xenc
         ed["Type"] = "#{XMLENC_NS}Element"
 
-        enc_method = @doc.create_element("EncryptionMethod").tap do |em|
+        ed.add_child(@doc.create_element("EncryptionMethod")).tap do |em|
           em.namespace = @xenc
           em["Algorithm"] = AES256_CBC
         end
 
-        ed.add_child(enc_method)
         ed.add_child(build_key_info)
         ed.add_child(build_cipher_data)
       end
@@ -53,12 +52,11 @@ module Lyrebird
         ek.add_namespace_definition("xenc", XMLENC_NS)
         ek.namespace = @xenc
 
-        enc_method = @doc.create_element("EncryptionMethod").tap do |em|
+        ek.add_child(@doc.create_element("EncryptionMethod")).tap do |em|
           em.namespace = @xenc
           em["Algorithm"] = RSA_OAEP
         end
 
-        ek.add_child(enc_method)
         ek.add_child(build_encrypted_key_cipher_data)
       end
     end
@@ -71,12 +69,10 @@ module Lyrebird
       @doc.create_element("CipherData").tap do |cd|
         cd.namespace = @xenc
 
-        cipher_value = @doc.create_element("CipherValue").tap do |cv|
+        cd.add_child(@doc.create_element("CipherValue")).tap do |cv|
           cv.namespace = @xenc
           cv.content = Base64.strict_encode64(encrypted_aes_key)
         end
-
-        cd.add_child(cipher_value)
       end
     end
 
@@ -90,12 +86,10 @@ module Lyrebird
       @doc.create_element("CipherData").tap do |cd|
         cd.namespace = @xenc
 
-        cipher_value = @doc.create_element("CipherValue").tap do |cv|
+        cd.add_child(@doc.create_element("CipherValue")).tap do |cv|
           cv.namespace = @xenc
           cv.content = Base64.strict_encode64(iv + ciphertext)
         end
-
-        cd.add_child(cipher_value)
       end
     end
   end
