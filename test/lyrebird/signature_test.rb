@@ -7,10 +7,16 @@ module Lyrebird
     NS = { "ds" => XMLDSIG_NS, "saml" => SAML_ASSERTION_NS }.freeze
 
     def setup
-      @certificate = Certificate.build
-      @assertion = Assertion.new.document
-      @element = @assertion.root
-      Signature.new(@element, @certificate).sign!
+      unless defined?(@@certificate)
+        @@certificate = Certificate.build
+        @@assertion = Assertion.new.document
+        @@element = @@assertion.root
+        Signature.new(@@element, @@certificate).sign!
+      end
+
+      @certificate = @@certificate
+      @assertion = @@assertion
+      @element = @@element
       @signature = @element.at_xpath("ds:Signature", NS)
       @signed_info = @signature.at_xpath("ds:SignedInfo", NS)
       @reference = @signed_info.at_xpath("ds:Reference", NS)
@@ -60,8 +66,7 @@ module Lyrebird
     end
 
     def test_reference_uri
-      element_id = @element["ID"]
-      assert_equal "##{element_id}", @reference["URI"]
+      assert_equal "##{@element["ID"]}", @reference["URI"]
     end
 
     def test_transforms_element
@@ -136,12 +141,17 @@ module Lyrebird
     end
 
     def test_digest_verifies
-      @signature.remove
+      assertion = @assertion.dup
+      element = assertion.root
+      signature = element.at_xpath("ds:Signature", NS)
+      reference = signature.at_xpath("ds:SignedInfo/ds:Reference", NS)
+
+      signature.remove
       c14n = Nokogiri::XML::XML_C14N_EXCLUSIVE_1_0
-      canonical = @element.canonicalize(c14n)
+      canonical = element.canonicalize(c14n)
       computed = OpenSSL::Digest::SHA256.digest(canonical)
 
-      digest_value = @reference.at_xpath("ds:DigestValue", NS)
+      digest_value = reference.at_xpath("ds:DigestValue", NS)
       expected = Base64.strict_decode64(digest_value.text)
       assert_equal expected, computed
     end
