@@ -11,10 +11,17 @@ module Lyrebird
     }.freeze
 
     def setup
-      @assertion = Assertion.new.document
-      @element = @assertion.root
-      @certificate = Certificate.build
-      @encrypted = Encryption.new(@element, @certificate).encrypt
+      unless defined?(@@certificate)
+        @@assertion = Assertion.new.document
+        @@element = @@assertion.root
+        @@certificate = Certificate.build
+        @@encrypted = Encryption.new(@@element, @@certificate).encrypt
+      end
+
+      @assertion = @@assertion
+      @element = @@element
+      @certificate = @@certificate
+      @encrypted = @@encrypted
       @ed = @encrypted.at_xpath("xenc:EncryptedData", NS)
       @ki = @ed.at_xpath("ds:KeyInfo", NS)
       @ek = @ki.at_xpath("xenc:EncryptedKey", NS)
