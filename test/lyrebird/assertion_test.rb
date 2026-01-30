@@ -7,14 +7,25 @@ module Lyrebird
     NS = { "saml" => SAML_ASSERTION_NS }.freeze
 
     def setup
-      @assertion = Assertion.new.document
-      @root = @assertion.root
-      @subject = @root.at_xpath("saml:Subject", NS)
-      @sc = @subject.at_xpath("saml:SubjectConfirmation", NS)
-      @scd = @sc.at_xpath("saml:SubjectConfirmationData", NS)
-      @conditions = @root.at_xpath("saml:Conditions", NS)
-      @audience_restriction = @conditions.at_xpath("saml:AudienceRestriction", NS)
-      @authn_statement = @root.at_xpath("saml:AuthnStatement", NS)
+      unless defined?(@@assertion)
+        @@assertion = Assertion.new.document
+        @@root = @@assertion.root
+        @@subject = @@root.at_xpath("saml:Subject", NS)
+        @@sc = @@subject.at_xpath("saml:SubjectConfirmation", NS)
+        @@scd = @@sc.at_xpath("saml:SubjectConfirmationData", NS)
+        @@conditions = @@root.at_xpath("saml:Conditions", NS)
+        @@audience_restriction = @@conditions.at_xpath("saml:AudienceRestriction", NS)
+        @@authn_statement = @@root.at_xpath("saml:AuthnStatement", NS)
+      end
+
+      @assertion = @@assertion
+      @root = @@root
+      @subject = @@subject
+      @sc = @@sc
+      @scd = @@scd
+      @conditions = @@conditions
+      @audience_restriction = @@audience_restriction
+      @authn_statement = @@authn_statement
     end
 
     def test_root_name
