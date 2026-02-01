@@ -59,11 +59,8 @@ module Lyrebird
     end
 
     def canonicalize_signed_info
-      save_opts = Nokogiri::XML::Node::SaveOptions::AS_XML
-      xml = @signed_info.to_xml(save_with: save_opts)
-      pattern = "<ds:SignedInfo>"
-      replacement = "<ds:SignedInfo xmlns:ds=\"#{XMLDSIG_NS}\">"
-      xml = xml.sub(pattern, replacement)
+      xml = @signed_info.to_xml(save_with: Nokogiri::XML::Node::SaveOptions::AS_XML)
+      xml = xml.sub("<ds:SignedInfo>", "<ds:SignedInfo xmlns:ds=\"#{XMLDSIG_NS}\">")
       Nokogiri::XML(xml).root.canonicalize(C14N_EXCLUSIVE)
     end
 
