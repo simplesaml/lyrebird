@@ -71,5 +71,35 @@ module Lyrebird
       assert_equal email, saml_response.attributes["email"]
       assert_equal role, saml_response.attributes["role"]
     end
+
+    def test_ruby_saml_parses_idp_initiated_response
+      name_id = "user@example.com"
+      email = "test@example.com"
+
+      response = Response.build(sign_with: @idp_cert) do |r|
+        r.in_response_to = nil
+        r.destination = nil
+        r.name_id = name_id
+
+        r.attributes do |a|
+          a.email = email
+        end
+      end
+
+      settings = OneLogin::RubySaml::Settings.new.tap do |s|
+        s.idp_cert = @idp_cert.x509_pem
+        s.sp_entity_id = DEFAULTS.audience
+        s.assertion_consumer_service_url = DEFAULTS.recipient
+      end
+
+      saml_response = OneLogin::RubySaml::Response.new(
+        response.mimic,
+        settings: settings
+      )
+
+      assert saml_response.is_valid?, saml_response.errors
+      assert_equal name_id, saml_response.nameid
+      assert_equal email, saml_response.attributes["email"]
+    end
   end
 end
