@@ -56,7 +56,7 @@ module Lyrebird
     private
 
     def build_x509
-      now = Time.now
+      now = Time.now.utc
 
       OpenSSL::X509::Certificate.new.tap do |c|
         c.public_key = @key.public_key
