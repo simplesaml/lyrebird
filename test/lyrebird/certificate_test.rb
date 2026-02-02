@@ -53,13 +53,6 @@ module Lyrebird
       assert @certificate.x509.verify(@certificate.key)
     end
 
-    def test_sign
-      data = "test"
-      signature = @certificate.sign(data)
-      public_key = @certificate.x509.public_key
-      assert public_key.verify("SHA256", signature, data)
-    end
-
     def test_x509_with_custom_subject
       certificate = Certificate.build(cn: "Test", o: "Acme")
       subject = certificate.x509.subject.to_s

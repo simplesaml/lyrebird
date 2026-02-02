@@ -53,7 +53,7 @@ module Lyrebird
       @doc.create_element("SignatureValue").tap do |sv|
         sv.namespace = @ds
         canonical = canonicalize_signed_info
-        sig = @certificate.sign(canonical)
+        sig = @certificate.key.sign("SHA256", canonical)
         sv.content = Base64.strict_encode64(sig)
       end
     end
