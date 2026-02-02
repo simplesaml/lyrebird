@@ -9,6 +9,7 @@ Gem::Specification.new do |spec|
 
   spec.summary = "Mimics SAML Identity Provider (IdP) responses for testing"
   spec.homepage = "https://github.com/simplesaml/lyrebird"
+  spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"
 
   spec.files = `git ls-files -z`.split("\x0")
