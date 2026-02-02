@@ -20,6 +20,16 @@ require_relative "lyrebird/version"
 module Lyrebird
   class Error < StandardError; end
 
+  rails_env = ENV["RAILS_ENV"]&.downcase
+  rack_env = ENV["RACK_ENV"]&.downcase
+
+  if rails_env == "production" || rack_env == "production"
+    warn <<~MESSAGE.strip
+      [Lyrebird] WARNING: Loaded in production environment. \
+      This library is for testing only.
+    MESSAGE
+  end
+
   def self.configure
     yield DEFAULTS
     DEFAULTS.freeze
