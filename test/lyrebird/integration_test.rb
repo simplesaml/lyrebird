@@ -205,5 +205,39 @@ module Lyrebird
       assert_operator Time.now.utc, :<, saml_response.not_before
       refute saml_response.is_valid?
     end
+
+    def test_ruby_saml_rejects_tampered_signed_response
+      original_email = "user@example.com"
+      tampered_email = "attacker@evil.com"
+
+      response = Response.build(sign_with: @idp_cert) do |r|
+        r.name_id = "user@example.com"
+
+        r.attributes do |a|
+          a.email = original_email
+          a.role = "user"
+        end
+      end
+
+      doc = Nokogiri::XML(Base64.strict_decode64(response.mimic))
+      xpath = "//saml:Attribute[@Name='email']/saml:AttributeValue"
+      email_attr = doc.at_xpath(xpath, { "saml" => SAML_ASSERTION_NS })
+      email_attr.content = tampered_email
+      tampered = Base64.strict_encode64(doc.to_xml(save_with: 0))
+
+      settings = OneLogin::RubySaml::Settings.new.tap do |s|
+        s.idp_cert = @idp_cert.x509_pem
+        s.sp_entity_id = DEFAULTS.audience
+        s.assertion_consumer_service_url = DEFAULTS.recipient
+      end
+
+      saml_response = OneLogin::RubySaml::Response.new(
+        tampered,
+        settings: settings
+      )
+
+      refute saml_response.is_valid?
+      assert_includes saml_response.errors.join(" "), "Signature"
+    end
   end
 end
