@@ -1,3 +1,7 @@
+[![Gem Version](
+https://badge.fury.io/rb/lyrebird.svg
+)](https://badge.fury.io/rb/lyrebird)
+
 # Lyrebird
 A Ruby gem for mimicking SAML Identity Provider (IdP) responses in test
 environments.
