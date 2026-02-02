@@ -33,7 +33,7 @@ module Lyrebird
       @attributes = {
         first_name: "Test",
         last_name: "User",
-      }
+      }.freeze
     end
   end
 
