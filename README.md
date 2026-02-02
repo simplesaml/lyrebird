@@ -121,13 +121,16 @@ Lyrebird::NAMEID_UNSPECIFIED # unspecified
 Override defaults globally for all responses/assertions:
 ```ruby
 # test/test_helper.rb
-Lyrebird::DEFAULTS.issuer = "https://custom.example.com"
-Lyrebird::DEFAULTS.recipient = "https://custom.example.com/acs"
-Lyrebird::DEFAULTS.audience = "https://custom.example.com"
-Lyrebird::DEFAULTS.name_id = "default@example.com"
-Lyrebird::DEFAULTS.valid_for = 600 # 10 minutes
-Lyrebird::DEFAULTS.attributes = { role: "user" }
+Lyrebird.configure do |d|
+  d.issuer = "https://custom.example.com"
+  d.recipient = "https://custom.example.com/acs"
+  d.audience = "https://custom.example.com"
+  d.name_id = "default@example.com"
+  d.valid_for = 600 # 10 minutes
+  d.attributes = { role: "user" }
+end
 ```
+Defaults are frozen after configuration for thread safety.
 
 ## Certificate
 Generates and manages X.509 certificates for signing SAML responses.

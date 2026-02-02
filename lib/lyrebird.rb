@@ -19,4 +19,9 @@ require_relative "lyrebird/version"
 
 module Lyrebird
   class Error < StandardError; end
+
+  def self.configure
+    yield DEFAULTS
+    DEFAULTS.freeze
+  end
 end

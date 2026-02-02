@@ -42,4 +42,17 @@ module Lyrebird
       assert_equal expected, DEFAULTS.attributes
     end
   end
+
+  class ConfigureTest < Minitest::Test
+    def test_configure_yields_defaults
+      yielded = nil
+      Lyrebird.configure { |d| yielded = d }
+      assert_same DEFAULTS, yielded
+    end
+
+    def test_configure_freezes_defaults
+      Lyrebird.configure { |d| }
+      assert DEFAULTS.frozen?
+    end
+  end
 end
