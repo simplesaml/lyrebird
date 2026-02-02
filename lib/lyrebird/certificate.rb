@@ -59,6 +59,8 @@ module Lyrebird
       now = Time.now.utc
 
       OpenSSL::X509::Certificate.new.tap do |c|
+        c.version = 2
+        c.serial = OpenSSL::BN.rand(64)
         c.public_key = @key.public_key
         c.subject = build_subject
         c.issuer = c.subject

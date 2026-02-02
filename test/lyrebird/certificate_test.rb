@@ -31,6 +31,15 @@ module Lyrebird
       assert_instance_of OpenSSL::X509::Certificate, @certificate.x509
     end
 
+    def test_x509_version_is_v3
+      assert_equal 2, @certificate.x509.version
+    end
+
+    def test_x509_has_serial_number
+      refute_nil @certificate.x509.serial
+      assert @certificate.x509.serial.to_i > 0
+    end
+
     def test_x509_not_before_is_now
       assert_in_delta @created_at, @certificate.x509.not_before, 1
     end
