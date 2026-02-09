@@ -15,6 +15,10 @@ gem "lyrebird", group: :test
 ```ruby
 # test/integration/saml_test.rb
 class SAMLTest < ActionDispatch::IntegrationTest
+  setup do
+    @idp_cert = Lyrebird::Certificate.build
+  end
+
   test "consume creates a session" do
     user = users(:alice)
 
@@ -24,6 +28,7 @@ class SAMLTest < ActionDispatch::IntegrationTest
       r.recipient = saml_consume_url
       r.audience = root_url
       r.name_id = user.email
+      r.sign_with = @idp_cert
 
       r.attributes do |a|
         a.email = user.email
