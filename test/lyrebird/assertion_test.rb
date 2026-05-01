@@ -33,6 +33,11 @@ module Lyrebird
       assert_equal "saml", @root.namespace.prefix
     end
 
+    def test_document_is_memoized
+      assertion = Assertion.new
+      assert_same assertion.document, assertion.document
+    end
+
     def test_root_namespace
       assert_equal SAML_ASSERTION_NS, @root.namespace.href
     end

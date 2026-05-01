@@ -39,7 +39,7 @@ module Lyrebird
     end
 
     def document
-      Nokogiri::XML::Document.new.tap do |doc|
+      @document ||= Nokogiri::XML::Document.new.tap do |doc|
         doc.root = build_response(doc)
         sign_assertion(doc) if @sign_with && !@encrypt_with
         sign_response(doc) if @sign_with

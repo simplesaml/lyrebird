@@ -28,7 +28,7 @@ module Lyrebird
     end
 
     def document
-      Nokogiri::XML::Document.new.tap do |doc|
+      @document ||= Nokogiri::XML::Document.new.tap do |doc|
         doc.root = root(doc)
       end
     end

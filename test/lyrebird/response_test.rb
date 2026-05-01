@@ -100,6 +100,14 @@ module Lyrebird
       assert decoded.include?("<saml:Assertion")
     end
 
+    def test_document_is_memoized
+      assert_same @response.document, @response.document
+    end
+
+    def test_mimic_is_stable
+      assert_equal @response.mimic, @response.mimic
+    end
+
     def test_root_name
       assert_equal "Response", @root.name
       assert_equal "samlp", @root.namespace.prefix
