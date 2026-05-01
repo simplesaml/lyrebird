@@ -13,6 +13,7 @@ module Lyrebird
     def sign!
       issuer = @element.at_xpath("saml:Issuer", "saml" => SAML_ASSERTION_NS)
       issuer.add_next_sibling(build_signature)
+      populate_signature_value
       self
     end
 
@@ -52,16 +53,14 @@ module Lyrebird
     def build_signature_value
       @doc.create_element("SignatureValue").tap do |sv|
         sv.namespace = @ds
-        canonical = canonicalize_signed_info
-        sig = @certificate.key.sign("SHA256", canonical)
-        sv.content = Base64.strict_encode64(sig)
+        @signature_value = sv
       end
     end
 
-    def canonicalize_signed_info
-      xml = @signed_info.to_xml(save_with: Nokogiri::XML::Node::SaveOptions::AS_XML)
-      xml = xml.sub("<ds:SignedInfo>", "<ds:SignedInfo xmlns:ds=\"#{XMLDSIG_NS}\">")
-      Nokogiri::XML(xml).root.canonicalize(C14N_EXCLUSIVE)
+    def populate_signature_value
+      canonical = @signed_info.canonicalize(C14N_EXCLUSIVE)
+      sig = @certificate.key.sign("SHA256", canonical)
+      @signature_value.content = Base64.strict_encode64(sig)
     end
 
     def build_key_info
