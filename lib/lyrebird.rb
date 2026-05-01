@@ -18,8 +18,6 @@ require_relative "lyrebird/signature"
 require_relative "lyrebird/version"
 
 module Lyrebird
-  class Error < StandardError; end
-
   rails_env = ENV["RAILS_ENV"]&.downcase
   rack_env = ENV["RACK_ENV"]&.downcase
 
