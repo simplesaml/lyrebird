@@ -173,7 +173,6 @@ cert.key          # OpenSSL::PKey::RSA private key
 cert.x509         # OpenSSL::X509::Certificate object
 cert.key_pem      # PEM-encoded private key
 cert.x509_pem     # PEM-encoded certificate
-cert.sign(data)   # Sign data with RSA-SHA256
 cert.base64       # Base64-encoded certificate (for SAML metadata)
 cert.fingerprint  # SHA256 fingerprint
 ```
