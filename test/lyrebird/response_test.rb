@@ -287,7 +287,7 @@ module Lyrebird
         signed_info.canonicalize(c14n)
       )
 
-      assert verified, "SignedInfo signature did not verify"
+      assert verified
 
       signature.remove
       digest = OpenSSL::Digest::SHA256.digest(assertion.canonicalize(c14n))
