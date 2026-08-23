@@ -71,8 +71,7 @@ module Lyrebird
     end
 
     def build_assertion_element
-      assertion_doc = @assertion.document
-      element = assertion_doc.root
+      element = @assertion.document.root
 
       if @encrypt_with
         Signature.new(element, @sign_with).sign! if @sign_with

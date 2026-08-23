@@ -21,7 +21,7 @@ module Lyrebird
       @recipient = recipient
       @in_response_to = in_response_to
       @not_before = (not_before || @issue_instant).to_time.getutc
-      @not_on_or_after = @issue_instant + valid_for
+      @not_on_or_after = [@issue_instant, @not_before].max + valid_for
       @audience = audience
       @authn_context = authn_context
       @attributes = attributes

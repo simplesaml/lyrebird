@@ -222,6 +222,23 @@ module Lyrebird
       assert_in_delta expected.to_i, not_on_or_after.to_i, 1
     end
 
+    def test_not_on_or_after_follows_future_not_before
+      not_before = Time.now.utc + 600
+      assertion = Assertion.new(not_before: not_before).document
+      conditions = assertion.root.at_xpath("saml:Conditions", NS)
+      not_on_or_after = Time.iso8601(conditions["NotOnOrAfter"])
+      expected = not_before + DEFAULTS.valid_for
+      assert_in_delta expected.to_i, not_on_or_after.to_i, 1
+    end
+
+    def test_not_on_or_after_unaffected_by_past_not_before
+      assertion = Assertion.new(not_before: Time.now.utc - 3600).document
+      conditions = assertion.root.at_xpath("saml:Conditions", NS)
+      not_on_or_after = Time.iso8601(conditions["NotOnOrAfter"])
+      expected = Time.now.utc + DEFAULTS.valid_for
+      assert_in_delta expected.to_i, not_on_or_after.to_i, 1
+    end
+
     def test_audience_restriction
       assert_equal "AudienceRestriction", @audience_restriction.name
       assert_equal "saml", @audience_restriction.namespace.prefix
