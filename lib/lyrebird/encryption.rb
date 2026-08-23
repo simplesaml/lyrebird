@@ -49,7 +49,6 @@ module Lyrebird
 
     def build_encrypted_key
       @doc.create_element("EncryptedKey").tap do |ek|
-        ek.add_namespace_definition("xenc", XMLENC_NS)
         ek.namespace = @xenc
 
         ek.add_child(@doc.create_element("EncryptionMethod")).tap do |em|

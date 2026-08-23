@@ -35,7 +35,6 @@ module Lyrebird
     def build_signed_info
       @doc.create_element("SignedInfo").tap do |si|
         @signed_info = si
-        si.add_namespace_definition("ds", XMLDSIG_NS)
         si.namespace = @ds
 
         si.add_child(@doc.create_element("CanonicalizationMethod")).tap do |cm|
