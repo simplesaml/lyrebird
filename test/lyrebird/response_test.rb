@@ -254,5 +254,44 @@ module Lyrebird
       ed = root.at_xpath(xpath, NAMESPACES)
       assert_equal "EncryptedData", ed.name
     end
+
+    def test_encrypted_assertion_signature_verifies_after_decryption
+      idp = Certificate.build
+      sp = Certificate.build
+      root = Response.new(sign_with: idp, encrypt_with: sp).document.root
+
+      c14n = Nokogiri::XML::XML_C14N_EXCLUSIVE_1_0
+      padding = OpenSSL::PKey::RSA::PKCS1_OAEP_PADDING
+      key_xpath = "//xenc:EncryptedKey/xenc:CipherData/xenc:CipherValue"
+      data_xpath = "//xenc:EncryptedData/xenc:CipherData/xenc:CipherValue"
+      key_cv = root.at_xpath(key_xpath, NAMESPACES)
+      encrypted_key = Base64.strict_decode64(key_cv.text)
+      blob = Base64.strict_decode64(root.at_xpath(data_xpath, NAMESPACES).text)
+
+      cipher = OpenSSL::Cipher.new("AES-256-CBC")
+      cipher.decrypt
+      cipher.key = sp.key.private_decrypt(encrypted_key, padding)
+      cipher.iv = blob[0, 16]
+      plaintext = cipher.update(blob[16..]) + cipher.final
+      assertion = Nokogiri::XML(plaintext).root
+
+      signature = assertion.at_xpath("ds:Signature", NAMESPACES)
+      signed_info = signature.at_xpath("ds:SignedInfo", NAMESPACES)
+      digest_xpath = "ds:Reference/ds:DigestValue"
+      digest_value = signed_info.at_xpath(digest_xpath, NAMESPACES).text
+      sv = signature.at_xpath("ds:SignatureValue", NAMESPACES).text
+
+      verified = idp.x509.public_key.verify(
+        "SHA256",
+        Base64.strict_decode64(sv),
+        signed_info.canonicalize(c14n)
+      )
+
+      assert verified, "SignedInfo signature did not verify"
+
+      signature.remove
+      digest = OpenSSL::Digest::SHA256.digest(assertion.canonicalize(c14n))
+      assert_equal digest_value, Base64.strict_encode64(digest)
+    end
   end
 end

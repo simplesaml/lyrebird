@@ -81,7 +81,8 @@ module Lyrebird
       cipher.encrypt
       cipher.key = @aes_key
       iv = cipher.random_iv
-      ciphertext = cipher.update(@element.to_xml) + cipher.final
+      plaintext = @element.to_xml(save_with: 0)
+      ciphertext = cipher.update(plaintext) + cipher.final
 
       @doc.create_element("CipherData").tap do |cd|
         cd.namespace = @xenc

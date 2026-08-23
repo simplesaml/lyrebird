@@ -135,5 +135,22 @@ module Lyrebird
       decrypted_key = private_key.private_decrypt(encrypted_key, padding)
       assert_equal 32, decrypted_key.bytesize
     end
+
+    def test_ciphertext_preserves_canonical_form
+      c14n = Nokogiri::XML::XML_C14N_EXCLUSIVE_1_0
+      padding = OpenSSL::PKey::RSA::PKCS1_OAEP_PADDING
+      key_cv = @ek.at_xpath("xenc:CipherData/xenc:CipherValue", NS)
+      encrypted_key = Base64.strict_decode64(key_cv.text)
+      blob = Base64.strict_decode64(@cd.at_xpath("xenc:CipherValue", NS).text)
+
+      cipher = OpenSSL::Cipher.new("AES-256-CBC")
+      cipher.decrypt
+      cipher.key = @certificate.key.private_decrypt(encrypted_key, padding)
+      cipher.iv = blob[0, 16]
+      plaintext = cipher.update(blob[16..]) + cipher.final
+      decrypted = Nokogiri::XML(plaintext).root
+
+      assert_equal @element.canonicalize(c14n), decrypted.canonicalize(c14n)
+    end
   end
 end
