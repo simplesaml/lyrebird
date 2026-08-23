@@ -66,11 +66,11 @@ module Lyrebird
         end
 
         r.add_child(build_status(doc))
-        r.add_child(build_assertion_element(doc))
+        r.add_child(build_assertion_element)
       end
     end
 
-    def build_assertion_element(doc)
+    def build_assertion_element
       assertion_doc = @assertion.document
       element = assertion_doc.root
 
