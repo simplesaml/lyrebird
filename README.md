@@ -7,6 +7,7 @@ A Ruby gem for mimicking SAML Identity Provider (IdP) responses in test
 environments.
 
 ## Installation
+Requires Ruby 3.2 or newer.
 ```ruby
 gem "lyrebird", group: :test
 ```
@@ -91,6 +92,8 @@ end
 response.mimic    # Base64-encoded SAML response (for POST binding)
 response.document # Nokogiri::XML::Document for inspection
 ```
+Signatures cover the exact bytes `mimic` produces. Re-serializing
+`document` reformats the XML and invalidates them.
 
 ### Signing
 Sign both the assertion and response with an IdP certificate:
@@ -113,6 +116,8 @@ response = Lyrebird::Response.build do |r|
   r.encrypt_with = sp_cert
 end
 ```
+The assertion is signed first and then encrypted, and the response is
+signed over the ciphertext.
 
 ### Testing rejection paths
 Build deliberately invalid responses the SP should reject:
@@ -162,7 +167,8 @@ Lyrebird.configure do |d|
   d.attributes = { role: "user" }
 end
 ```
-Defaults are frozen after configuration for thread safety.
+Defaults are frozen after configuration for thread safety, so
+`configure` can only be called once.
 
 ## Certificate
 Generates and manages X.509 certificates for signing SAML responses.
