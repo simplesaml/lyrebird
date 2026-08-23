@@ -118,6 +118,36 @@ response = Lyrebird::Response.build do |r|
 end
 ```
 
+### Testing rejection paths
+Build deliberately invalid responses to exercise the SP's rejection
+paths:
+```ruby
+# Expired (NotOnOrAfter in the past)
+response = Lyrebird::Response.build do |r|
+  r.sign_with = idp_cert
+  r.valid_for = -10
+end
+
+# Not yet valid (NotBefore in the future)
+response = Lyrebird::Response.build do |r|
+  r.sign_with = idp_cert
+  r.not_before = Time.now.utc + 600
+end
+
+# Wrong audience
+response = Lyrebird::Response.build do |r|
+  r.sign_with = idp_cert
+  r.audience = "https://wrong.example.com"
+end
+
+# Untrusted signature (a certificate the SP does not know)
+response = Lyrebird::Response.build do |r|
+  r.sign_with = Lyrebird::Certificate.build
+end
+```
+Pass timestamps in UTC. A `Time` carrying a local zone is written with
+that offset.
+
 ### NameID Formats
 ```ruby
 Lyrebird::NAMEID_EMAIL       # emailAddress (default)
