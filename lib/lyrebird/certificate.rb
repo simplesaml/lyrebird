@@ -41,8 +41,9 @@ module Lyrebird
       @x509.to_pem
     end
 
-    def fingerprint
-      OpenSSL::Digest::SHA256.hexdigest(@x509.to_der)
+    def fingerprint(algorithm = :sha256)
+      digest = OpenSSL::Digest.new(algorithm.to_s)
+      digest.hexdigest(@x509.to_der).upcase.scan(/../).join(":")
     end
 
     def base64

@@ -81,8 +81,14 @@ module Lyrebird
 
     def test_fingerprint
       der = @certificate.x509.to_der
-      expected = OpenSSL::Digest::SHA256.hexdigest(der)
-      assert_equal expected, @certificate.fingerprint
+      hex = OpenSSL::Digest::SHA256.hexdigest(der).upcase
+      assert_equal hex.scan(/../).join(":"), @certificate.fingerprint
+    end
+
+    def test_fingerprint_with_sha1
+      der = @certificate.x509.to_der
+      hex = OpenSSL::Digest::SHA1.hexdigest(der).upcase
+      assert_equal hex.scan(/../).join(":"), @certificate.fingerprint(:sha1)
     end
 
     def test_base64

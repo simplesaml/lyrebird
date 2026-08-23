@@ -197,10 +197,11 @@ cert = Lyrebird::Certificate.load(
 
 ### Using a certificate
 ```ruby
-cert.key          # OpenSSL::PKey::RSA private key
-cert.x509         # OpenSSL::X509::Certificate object
-cert.key_pem      # PEM-encoded private key
-cert.x509_pem     # PEM-encoded certificate
-cert.base64       # Base64-encoded certificate (for SAML metadata)
-cert.fingerprint  # SHA256 fingerprint
+cert.key                 # OpenSSL::PKey::RSA private key
+cert.x509                # OpenSSL::X509::Certificate object
+cert.key_pem             # PEM-encoded private key
+cert.x509_pem            # PEM-encoded certificate
+cert.base64              # Base64-encoded certificate (for SAML metadata)
+cert.fingerprint         # SHA256 fingerprint, colon-separated
+cert.fingerprint(:sha1)  # SHA1 fingerprint
 ```
