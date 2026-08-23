@@ -11,7 +11,9 @@ module Lyrebird
     end
 
     def sign!
-      issuer = @element.at_xpath("saml:Issuer", "saml" => SAML_ASSERTION_NS)
+      ns = { "saml" => SAML_ASSERTION_NS, "ds" => XMLDSIG_NS }
+      @element.at_xpath("ds:Signature", ns)&.remove
+      issuer = @element.at_xpath("saml:Issuer", ns)
       issuer.add_next_sibling(build_signature)
       populate_signature_value
       self

@@ -33,7 +33,8 @@ module Lyrebird
     end
 
     def test_authn_context
-      expected = "urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport"
+      prefix = "urn:oasis:names:tc:SAML:2.0:ac:classes:"
+      expected = "#{prefix}PasswordProtectedTransport"
       assert_equal expected, DEFAULTS.authn_context
     end
 

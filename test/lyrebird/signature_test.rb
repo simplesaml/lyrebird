@@ -140,6 +140,44 @@ module Lyrebird
       assert_equal @certificate.base64, cert.text
     end
 
+    def test_sign_twice_leaves_one_signature
+      element = Assertion.new.document.root
+      Signature.new(element, @certificate).sign!
+      Signature.new(element, @certificate).sign!
+      assert_equal 1, element.xpath("ds:Signature", NS).size
+    end
+
+    def test_sign_twice_uses_latest_certificate
+      other = Certificate.build
+      element = Assertion.new.document.root
+      Signature.new(element, @certificate).sign!
+      Signature.new(element, other).sign!
+      xpath = "ds:Signature/ds:KeyInfo/ds:X509Data/ds:X509Certificate"
+      assert_equal other.base64, element.at_xpath(xpath, NS).text
+    end
+
+    def test_sign_twice_produces_verifiable_signature
+      element = Assertion.new.document.root
+      Signature.new(element, @certificate).sign!
+      Signature.new(element, @certificate).sign!
+
+      signature = element.at_xpath("ds:Signature", NS)
+      xpath = "ds:SignedInfo/ds:Reference/ds:DigestValue"
+      expected = Base64.strict_decode64(signature.at_xpath(xpath, NS).text)
+      signature.remove
+      canonical = element.canonicalize(Nokogiri::XML::XML_C14N_EXCLUSIVE_1_0)
+
+      assert_equal expected, OpenSSL::Digest::SHA256.digest(canonical)
+    end
+
+    def test_sign_keeps_nested_signature
+      response = Response.new(sign_with: @certificate).document.root
+      xpath = "saml:Assertion/ds:Signature"
+
+      refute_nil response.at_xpath(xpath, NS)
+      assert_equal 1, response.xpath("ds:Signature", NS).size
+    end
+
     def test_digest_verifies
       assertion = @assertion.dup
       element = assertion.root

@@ -14,7 +14,8 @@ module Lyrebird
         @@sc = @@subject.at_xpath("saml:SubjectConfirmation", NS)
         @@scd = @@sc.at_xpath("saml:SubjectConfirmationData", NS)
         @@conditions = @@root.at_xpath("saml:Conditions", NS)
-        @@audience_restriction = @@conditions.at_xpath("saml:AudienceRestriction", NS)
+        xpath = "saml:AudienceRestriction"
+        @@audience_restriction = @@conditions.at_xpath(xpath, NS)
         @@authn_statement = @@root.at_xpath("saml:AuthnStatement", NS)
       end
 

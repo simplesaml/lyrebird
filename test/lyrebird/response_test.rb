@@ -281,11 +281,10 @@ module Lyrebird
       digest_value = signed_info.at_xpath(digest_xpath, NAMESPACES).text
       sv = signature.at_xpath("ds:SignatureValue", NAMESPACES).text
 
-      verified = idp.x509.public_key.verify(
-        "SHA256",
-        Base64.strict_decode64(sv),
-        signed_info.canonicalize(c14n)
-      )
+      public_key = idp.x509.public_key
+      signature_bytes = Base64.strict_decode64(sv)
+      canonical = signed_info.canonicalize(c14n)
+      verified = public_key.verify("SHA256", signature_bytes, canonical)
 
       assert verified
 
