@@ -11,8 +11,8 @@ module Lyrebird
     def test_generate_contains_uuid
       id = ID.generate
       uuid = id[1..]
-      uuid_pattern = /\A[0-9a-f-]{36}\z/
-      assert_match uuid_pattern, uuid
+      pattern = /\A\h{8}-\h{4}-\h{4}-\h{4}-\h{12}\z/
+      assert_match pattern, uuid
     end
   end
 end
