@@ -145,8 +145,6 @@ response = Lyrebird::Response.build do |r|
   r.sign_with = Lyrebird::Certificate.build
 end
 ```
-Pass timestamps in UTC. A `Time` carrying a local zone is written with
-that offset.
 
 ### NameID Formats
 ```ruby

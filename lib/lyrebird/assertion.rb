@@ -20,7 +20,7 @@ module Lyrebird
       @name_id_format = name_id_format
       @recipient = recipient
       @in_response_to = in_response_to
-      @not_before = not_before || @issue_instant
+      @not_before = (not_before || @issue_instant).to_time.getutc
       @not_on_or_after = @issue_instant + valid_for
       @audience = audience
       @authn_context = authn_context

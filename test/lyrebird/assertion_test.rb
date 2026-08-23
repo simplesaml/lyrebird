@@ -186,6 +186,26 @@ module Lyrebird
       assert_equal not_before.iso8601, conditions["NotBefore"]
     end
 
+    def test_conditions_not_before_coerced_to_utc
+      not_before = Time.new(2030, 1, 1, 12, 0, 0, "-05:00")
+      assertion = Assertion.new(not_before: not_before).document
+      conditions = assertion.root.at_xpath("saml:Conditions", NS)
+      assert_equal "2030-01-01T17:00:00Z", conditions["NotBefore"]
+    end
+
+    def test_not_before_does_not_mutate_caller
+      not_before = Time.new(2030, 1, 1, 12, 0, 0, "-05:00")
+      Assertion.new(not_before: not_before)
+      assert_equal "-05:00", not_before.strftime("%:z")
+    end
+
+    def test_conditions_not_before_accepts_datetime
+      not_before = DateTime.new(2030, 1, 1, 12, 0, 0, "-05:00")
+      assertion = Assertion.new(not_before: not_before).document
+      conditions = assertion.root.at_xpath("saml:Conditions", NS)
+      assert_equal "2030-01-01T17:00:00Z", conditions["NotBefore"]
+    end
+
     def test_conditions_not_on_or_after
       not_on_or_after = Time.iso8601(@conditions["NotOnOrAfter"])
       expected = Time.now.utc + DEFAULTS.valid_for
