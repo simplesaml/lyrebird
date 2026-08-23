@@ -5,13 +5,7 @@ require "test_helper"
 module Lyrebird
   class CertificateTest < Minitest::Test
     def setup
-      unless defined?(@@shared)
-        @@shared = Certificate.build
-        @@created_at = Time.now.utc
-      end
-
-      @certificate = @@shared
-      @created_at = @@created_at
+      @certificate = Certificate.default
     end
 
     def test_default_is_memoized
@@ -51,12 +45,15 @@ module Lyrebird
     end
 
     def test_x509_not_before_is_now
-      assert_in_delta @created_at, @certificate.x509.not_before, 1
+      now = Time.now.utc
+      certificate = Certificate.build
+      assert_in_delta now, certificate.x509.not_before, 1
     end
 
     def test_x509_not_after_is_one_year_from_now
-      expected = @created_at + (365 * 24 * 60 * 60)
-      assert_in_delta expected, @certificate.x509.not_after, 1
+      expected = Time.now.utc + (365 * 24 * 60 * 60)
+      certificate = Certificate.build
+      assert_in_delta expected, certificate.x509.not_after, 1
     end
 
     def test_x509_is_signed
