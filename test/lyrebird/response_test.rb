@@ -262,35 +262,34 @@ module Lyrebird
 
       c14n = Nokogiri::XML::XML_C14N_EXCLUSIVE_1_0
       padding = OpenSSL::PKey::RSA::PKCS1_OAEP_PADDING
-      key_xpath = "//xenc:EncryptedKey/xenc:CipherData/xenc:CipherValue"
-      data_xpath = "//xenc:EncryptedData/xenc:CipherData/xenc:CipherValue"
-      key_cv = root.at_xpath(key_xpath, NAMESPACES)
-      encrypted_key = Base64.strict_decode64(key_cv.text)
-      blob = Base64.strict_decode64(root.at_xpath(data_xpath, NAMESPACES).text)
+      ek = "//xenc:EncryptedKey/xenc:CipherData/xenc:CipherValue"
+      ed = "//xenc:EncryptedData/xenc:CipherData/xenc:CipherValue"
+      wrapped = Base64.strict_decode64(root.at_xpath(ek, NAMESPACES).text)
+      blob = Base64.strict_decode64(root.at_xpath(ed, NAMESPACES).text)
 
       cipher = OpenSSL::Cipher.new("AES-256-CBC")
       cipher.decrypt
-      cipher.key = sp.key.private_decrypt(encrypted_key, padding)
+      cipher.key = sp.key.private_decrypt(wrapped, padding)
       cipher.iv = blob[0, 16]
       plaintext = cipher.update(blob[16..]) + cipher.final
       assertion = Nokogiri::XML(plaintext).root
 
       signature = assertion.at_xpath("ds:Signature", NAMESPACES)
-      signed_info = signature.at_xpath("ds:SignedInfo", NAMESPACES)
-      digest_xpath = "ds:Reference/ds:DigestValue"
-      digest_value = signed_info.at_xpath(digest_xpath, NAMESPACES).text
+      info = signature.at_xpath("ds:SignedInfo", NAMESPACES)
+      path = "ds:Reference/ds:DigestValue"
+      expected = info.at_xpath(path, NAMESPACES).text
       sv = signature.at_xpath("ds:SignatureValue", NAMESPACES).text
 
-      public_key = idp.x509.public_key
-      signature_bytes = Base64.strict_decode64(sv)
-      canonical = signed_info.canonicalize(c14n)
-      verified = public_key.verify("SHA256", signature_bytes, canonical)
+      key = idp.x509.public_key
+      bytes = Base64.strict_decode64(sv)
+      canonical = info.canonicalize(c14n)
+      verified = key.verify("SHA256", bytes, canonical)
 
       assert verified
 
       signature.remove
       digest = OpenSSL::Digest::SHA256.digest(assertion.canonicalize(c14n))
-      assert_equal digest_value, Base64.strict_encode64(digest)
+      assert_equal expected, Base64.strict_encode64(digest)
     end
   end
 end

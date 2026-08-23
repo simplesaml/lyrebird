@@ -14,6 +14,16 @@ module Lyrebird
       @created_at = @@created_at
     end
 
+    def test_default_is_memoized
+      assert_same Certificate.default, Certificate.default
+    end
+
+    def test_default_is_signed_by_its_own_key
+      certificate = Certificate.default
+      assert_instance_of Certificate, certificate
+      assert certificate.x509.verify(certificate.key)
+    end
+
     def test_key_is_rsa
       assert_instance_of OpenSSL::PKey::RSA, @certificate.key
     end

@@ -15,10 +15,6 @@ gem "lyrebird", group: :test
 ```ruby
 # test/integration/saml_test.rb
 class SAMLTest < ActionDispatch::IntegrationTest
-  setup do
-    @idp_cert = Lyrebird::Certificate.build
-  end
-
   test "consume creates a session" do
     user = users(:alice)
 
@@ -28,7 +24,7 @@ class SAMLTest < ActionDispatch::IntegrationTest
       r.recipient = saml_consume_url
       r.audience = root_url
       r.name_id = user.email
-      r.sign_with = @idp_cert
+      r.sign_with = Lyrebird::Certificate.default
 
       r.attributes do |a|
         a.email = user.email
@@ -119,8 +115,7 @@ end
 ```
 
 ### Testing rejection paths
-Build deliberately invalid responses to exercise the SP's rejection
-paths:
+Build deliberately invalid responses the SP should reject:
 ```ruby
 # Expired (NotOnOrAfter in the past)
 response = Lyrebird::Response.build do |r|
@@ -173,7 +168,12 @@ Defaults are frozen after configuration for thread safety.
 Generates and manages X.509 certificates for signing SAML responses.
 
 ### Building a certificate
+Key generation is slow, so `Lyrebird::Certificate.default` generates one
+certificate and reuses it.
 ```ruby
+# Generated once and reused
+cert = Lyrebird::Certificate.default
+
 # With defaults
 cert = Lyrebird::Certificate.build
 

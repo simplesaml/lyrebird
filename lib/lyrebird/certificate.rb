@@ -2,7 +2,13 @@
 
 module Lyrebird
   class Certificate
+    LOCK = Mutex.new
+
     attr_reader :key, :x509
+
+    def self.default
+      LOCK.synchronize { @default ||= build }
+    end
 
     def self.build(**kwargs)
       config = OpenStruct.new(kwargs)
