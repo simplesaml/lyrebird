@@ -79,6 +79,66 @@ module Lyrebird
       assert_equal role, role_element.text
     end
 
+    def test_attributes_block_merges_across_calls
+      response = Response.build do |r|
+        r.attributes { |a| a.email = "a@b.c" }
+        r.attributes { |a| a.role = "admin" }
+      end
+
+      root = response.document.root
+      xpath = "saml:Assertion/saml:AttributeStatement/saml:Attribute"
+      names = root.xpath(xpath, NAMESPACES).map { |a| a["Name"] }
+
+      assert_equal %w[email role], names
+    end
+
+    def test_attributes_returns_hash_without_block
+      captured = nil
+
+      Response.build do |r|
+        r.attributes { |a| a.email = "a@b.c" }
+        captured = r.attributes
+      end
+
+      assert_equal({ email: "a@b.c" }, captured)
+    end
+
+    def test_attributes_block_merges_into_assigned_hash
+      response = Response.build do |r|
+        r.attributes = { email: "a@b.c" }
+        r.attributes { |a| a.role = "admin" }
+      end
+
+      root = response.document.root
+      xpath = "saml:Assertion/saml:AttributeStatement/saml:Attribute"
+      names = root.xpath(xpath, NAMESPACES).map { |a| a["Name"] }
+
+      assert_equal %w[email role], names
+    end
+
+    def test_attributes_block_overrides_matching_string_key
+      response = Response.build do |r|
+        r.attributes = { "email" => "old" }
+        r.attributes { |a| a.email = "new" }
+      end
+
+      root = response.document.root
+      xpath = "saml:Assertion/saml:AttributeStatement/saml:Attribute"
+      values = root.xpath(xpath, NAMESPACES)
+
+      assert_equal 1, values.size
+      assert_equal "new", values.first.text
+    end
+
+    def test_reading_attributes_keeps_defaults
+      response = Response.build { |r| r.attributes }
+      root = response.document.root
+      xpath = "saml:Assertion/saml:AttributeStatement/saml:Attribute"
+      names = root.xpath(xpath, NAMESPACES).map { |a| a["Name"] }
+
+      assert_equal DEFAULTS.attributes.keys.map(&:to_s), names
+    end
+
     def test_build_with_attributes_hash
       email = "user@example.com"
 

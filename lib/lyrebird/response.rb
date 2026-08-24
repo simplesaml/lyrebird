@@ -6,7 +6,11 @@ module Lyrebird
       config = OpenStruct.new(kwargs)
 
       config.define_singleton_method(:attributes) do |&block|
-        self.attributes = OpenStruct.new.tap(&block).to_h
+        current = self[:attributes] || {}
+        return current unless block
+
+        fresh = OpenStruct.new.tap(&block).to_h
+        self[:attributes] = current.transform_keys(&:to_sym).merge(fresh)
       end
 
       yield config if block_given?
