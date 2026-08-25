@@ -350,6 +350,36 @@ module Lyrebird
       assert_equal "developers", values[2].text
     end
 
+    def test_attribute_with_time_value
+      attributes = { seen: Time.at(0).utc }
+      assertion = Assertion.new(attributes: attributes).document
+      path = "saml:AttributeStatement/saml:Attribute"
+      attr = assertion.root.at_xpath(path, NS)
+      values = attr.xpath("saml:AttributeValue", NS)
+
+      assert_equal 1, values.size
+    end
+
+    def test_attribute_with_enumerable_value_expands
+      attributes = { groups: Set.new(%w[admin users]) }
+      assertion = Assertion.new(attributes: attributes).document
+      path = "saml:AttributeStatement/saml:Attribute"
+      attr = assertion.root.at_xpath(path, NS)
+      values = attr.xpath("saml:AttributeValue", NS)
+
+      assert_equal %w[admin users], values.map(&:text)
+    end
+
+    def test_attribute_with_nil_value_has_no_values
+      attributes = { missing: nil }
+      assertion = Assertion.new(attributes: attributes).document
+      path = "saml:AttributeStatement/saml:Attribute"
+      attr = assertion.root.at_xpath(path, NS)
+
+      assert_equal "missing", attr["Name"]
+      assert_empty attr.xpath("saml:AttributeValue", NS)
+    end
+
     def test_multiple_attributes
       attributes = {
         email: "user@example.com",

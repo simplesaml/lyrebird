@@ -121,12 +121,14 @@ module Lyrebird
         as.namespace = ns
 
         @attributes.each do |name, values|
+          list = values.is_a?(Enumerable) ? values.to_a : [values].compact
+
           as.add_child(doc.create_element("Attribute")).tap do |a|
             a.namespace = ns
             a["Name"] = name
             a["NameFormat"] = ATTR_NAME_FORMAT
 
-            Array(values).each do |value|
+            list.each do |value|
               a.add_child(doc.create_element("AttributeValue")).tap do |av|
                 av.namespace = ns
                 av.content = value
