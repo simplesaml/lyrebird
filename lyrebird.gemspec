@@ -12,10 +12,7 @@ Gem::Specification.new do |spec|
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"
 
-  spec.files = `git ls-files -z`.split("\x0")
-  spec.files.delete("Gemfile")
-  spec.files.delete(".gitignore")
-  spec.files.reject! { |f| f.start_with?("bin/") }
+  spec.files = Dir["lib/**/*.rb", "README.md", "LICENSE.md"]
 
   spec.require_paths = ["lib"]
 
