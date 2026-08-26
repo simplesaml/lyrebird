@@ -4,6 +4,11 @@ module Lyrebird
   class Certificate
     LOCK = Mutex.new
 
+    EXTENSIONS = {
+      "basicConstraints" => "CA:FALSE",
+      "keyUsage" => "digitalSignature,keyEncipherment"
+    }.freeze
+
     attr_reader :key, :x509
 
     def self.default
@@ -24,7 +29,7 @@ module Lyrebird
 
     def initialize(
       bits: 2048,
-      cn: nil,
+      cn: "lyrebird",
       o: nil,
       valid_for: 365,
       valid_until: nil,
@@ -69,6 +74,11 @@ module Lyrebird
         c.issuer = c.subject
         c.not_before = now
         c.not_after = @valid_until || now + (@valid_for * 86_400)
+
+        EXTENSIONS.each do |oid, value|
+          c.add_extension(OpenSSL::X509::Extension.new(oid, value, true))
+        end
+
         c.sign(@key, OpenSSL::Digest::SHA256.new)
       end
     end

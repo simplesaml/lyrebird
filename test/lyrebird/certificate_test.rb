@@ -39,6 +39,17 @@ module Lyrebird
       assert_equal 2, @certificate.x509.version
     end
 
+    def test_x509_subject_is_not_empty
+      assert_equal "/CN=lyrebird", @certificate.x509.subject.to_s
+    end
+
+    def test_x509_has_critical_v3_extensions
+      extensions = @certificate.x509.extensions
+      assert_equal %w[basicConstraints keyUsage], extensions.map(&:oid)
+      assert_equal "CA:FALSE", extensions.first.value
+      assert extensions.all?(&:critical?)
+    end
+
     def test_x509_has_serial_number
       refute_nil @certificate.x509.serial
       assert @certificate.x509.serial.to_i > 0
