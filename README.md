@@ -90,10 +90,12 @@ end
 ### Getting the encoded response
 ```ruby
 response.mimic    # Base64-encoded SAML response (for POST binding)
-response.document # Nokogiri::XML::Document for inspection
+response.to_xml   # the same response as plain XML (for reading)
+response.document # the response as a Nokogiri document (for searching)
 ```
-Signatures cover the exact bytes `mimic` produces. Re-serializing
-`document` reformats the XML and invalidates them.
+Use `response.to_xml`, not `document.to_xml`. Going through `document`
+adds spaces and line breaks, which breaks the signature, and the SP
+rejects the response.
 
 ### Signing
 Sign both the assertion and response with an IdP certificate:

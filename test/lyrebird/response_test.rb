@@ -160,6 +160,10 @@ module Lyrebird
       assert decoded.include?("<saml:Assertion")
     end
 
+    def test_to_xml_differs_from_reserializing_document
+      refute_equal @response.document.to_xml, @response.to_xml
+    end
+
     def test_document_is_memoized
       assert_same @response.document, @response.document
     end
