@@ -45,6 +45,19 @@ module Lyrebird
   end
 
   class ConfigureTest < Minitest::Test
+    NAMESPACES = { "saml" => SAML_ASSERTION_NS }.freeze
+
+    def setup
+      @original = DEFAULTS
+      Lyrebird.send(:remove_const, :DEFAULTS)
+      Lyrebird.const_set(:DEFAULTS, Defaults.new)
+    end
+
+    def teardown
+      Lyrebird.send(:remove_const, :DEFAULTS)
+      Lyrebird.const_set(:DEFAULTS, @original)
+    end
+
     def test_configure_yields_defaults
       yielded = nil
       Lyrebird.configure { |d| yielded = d }
@@ -54,6 +67,23 @@ module Lyrebird
     def test_configure_freezes_defaults
       Lyrebird.configure { |d| }
       assert DEFAULTS.frozen?
+    end
+
+    def test_configured_issuer_reaches_generated_xml
+      issuer = "https://configured.example.com"
+      refute_equal issuer, DEFAULTS.issuer
+      Lyrebird.configure { |d| d.issuer = issuer }
+      root = Response.build.document.root
+      assert_equal issuer, root.at_xpath("saml:Issuer", NAMESPACES).text
+    end
+
+    def test_configured_name_id_reaches_generated_xml
+      name_id = "configured@example.com"
+      refute_equal name_id, DEFAULTS.name_id
+      Lyrebird.configure { |d| d.name_id = name_id }
+      root = Response.build.document.root
+      xpath = "saml:Assertion/saml:Subject/saml:NameID"
+      assert_equal name_id, root.at_xpath(xpath, NAMESPACES).text
     end
   end
 end
