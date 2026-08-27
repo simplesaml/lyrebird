@@ -111,7 +111,7 @@ module Lyrebird
 
     def test_base64
       der = @certificate.x509.to_der
-      expected = Base64.strict_encode64(der)
+      expected = [der].pack("m0")
       assert_equal expected, @certificate.base64
     end
 

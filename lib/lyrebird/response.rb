@@ -39,7 +39,7 @@ module Lyrebird
     end
 
     def mimic
-      Base64.strict_encode64(to_xml)
+      [to_xml].pack("m0")
     end
 
     def to_xml

@@ -155,7 +155,7 @@ module Lyrebird
 
     def test_mimic_returns_base64
       encoded = @response.mimic
-      decoded = Base64.strict_decode64(encoded)
+      decoded = encoded.unpack1("m0")
       assert decoded.include?("<samlp:Response")
       assert decoded.include?("<saml:Assertion")
     end
@@ -328,8 +328,8 @@ module Lyrebird
       padding = OpenSSL::PKey::RSA::PKCS1_OAEP_PADDING
       ek = "//xenc:EncryptedKey/xenc:CipherData/xenc:CipherValue"
       ed = "//xenc:EncryptedData/xenc:CipherData/xenc:CipherValue"
-      wrapped = Base64.strict_decode64(root.at_xpath(ek, NAMESPACES).text)
-      blob = Base64.strict_decode64(root.at_xpath(ed, NAMESPACES).text)
+      wrapped = root.at_xpath(ek, NAMESPACES).text.unpack1("m0")
+      blob = root.at_xpath(ed, NAMESPACES).text.unpack1("m0")
 
       cipher = OpenSSL::Cipher.new("AES-256-CBC")
       cipher.decrypt
@@ -345,7 +345,7 @@ module Lyrebird
       sv = signature.at_xpath("ds:SignatureValue", NAMESPACES).text
 
       key = idp.x509.public_key
-      bytes = Base64.strict_decode64(sv)
+      bytes = sv.unpack1("m0")
       canonical = info.canonicalize(c14n)
       verified = key.verify("SHA256", bytes, canonical)
 
@@ -353,7 +353,7 @@ module Lyrebird
 
       signature.remove
       digest = OpenSSL::Digest::SHA256.digest(assertion.canonicalize(c14n))
-      assert_equal expected, Base64.strict_encode64(digest)
+      assert_equal expected, [digest].pack("m0")
     end
   end
 end

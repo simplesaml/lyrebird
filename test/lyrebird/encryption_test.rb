@@ -67,13 +67,13 @@ module Lyrebird
 
     def test_cipher_value_is_base64
       cv = @cd.at_xpath("xenc:CipherValue", NS)
-      decoded = Base64.strict_decode64(cv.text)
+      decoded = cv.text.unpack1("m0")
       assert decoded.bytesize > 16
     end
 
     def test_cipher_value_starts_with_iv
       cv = @cd.at_xpath("xenc:CipherValue", NS)
-      decoded = Base64.strict_decode64(cv.text)
+      decoded = cv.text.unpack1("m0")
       iv = decoded[0, 16]
       assert_equal 16, iv.bytesize
     end
@@ -116,13 +116,13 @@ module Lyrebird
 
     def test_encrypted_key_cipher_value_is_base64
       cv = @ek.at_xpath("xenc:CipherData/xenc:CipherValue", NS)
-      decoded = Base64.strict_decode64(cv.text)
+      decoded = cv.text.unpack1("m0")
       assert decoded.bytesize > 0
     end
 
     def test_encrypted_key_can_be_decrypted
       cv = @ek.at_xpath("xenc:CipherData/xenc:CipherValue", NS)
-      encrypted_key = Base64.strict_decode64(cv.text)
+      encrypted_key = cv.text.unpack1("m0")
       private_key = @certificate.key
       padding = OpenSSL::PKey::RSA::PKCS1_OAEP_PADDING
       decrypted_key = private_key.private_decrypt(encrypted_key, padding)
@@ -133,8 +133,8 @@ module Lyrebird
       c14n = Nokogiri::XML::XML_C14N_EXCLUSIVE_1_0
       padding = OpenSSL::PKey::RSA::PKCS1_OAEP_PADDING
       cv = @ek.at_xpath("xenc:CipherData/xenc:CipherValue", NS)
-      wrapped = Base64.strict_decode64(cv.text)
-      blob = Base64.strict_decode64(@cd.at_xpath("xenc:CipherValue", NS).text)
+      wrapped = cv.text.unpack1("m0")
+      blob = @cd.at_xpath("xenc:CipherValue", NS).text.unpack1("m0")
 
       cipher = OpenSSL::Cipher.new("AES-256-CBC")
       cipher.decrypt

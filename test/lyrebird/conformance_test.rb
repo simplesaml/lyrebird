@@ -54,7 +54,7 @@ module Lyrebird
     private
 
     def parse(response)
-      Nokogiri::XML(Base64.strict_decode64(response.mimic))
+      Nokogiri::XML(response.mimic.unpack1("m0"))
     end
 
     def assert_valid(response)

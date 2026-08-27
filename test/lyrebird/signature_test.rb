@@ -98,7 +98,7 @@ module Lyrebird
 
     def test_digest_value_is_base64
       digest_value = @reference.at_xpath("ds:DigestValue", NS)
-      decoded = Base64.strict_decode64(digest_value.text)
+      decoded = digest_value.text.unpack1("m0")
       assert_equal 32, decoded.bytesize
     end
 
@@ -110,7 +110,7 @@ module Lyrebird
 
     def test_signature_value_is_base64
       sv = @signature.at_xpath("ds:SignatureValue", NS)
-      decoded = Base64.strict_decode64(sv.text)
+      decoded = sv.text.unpack1("m0")
       assert_equal 256, decoded.bytesize
     end
 
@@ -157,7 +157,7 @@ module Lyrebird
 
       signature = element.at_xpath("ds:Signature", NS)
       xpath = "ds:SignedInfo/ds:Reference/ds:DigestValue"
-      expected = Base64.strict_decode64(signature.at_xpath(xpath, NS).text)
+      expected = signature.at_xpath(xpath, NS).text.unpack1("m0")
       signature.remove
       canonical = element.canonicalize(Nokogiri::XML::XML_C14N_EXCLUSIVE_1_0)
 
@@ -182,7 +182,7 @@ module Lyrebird
       computed = OpenSSL::Digest::SHA256.digest(canonical)
 
       digest_value = reference.at_xpath("ds:DigestValue", NS)
-      expected = Base64.strict_decode64(digest_value.text)
+      expected = digest_value.text.unpack1("m0")
       assert_equal expected, computed
     end
 
@@ -191,7 +191,7 @@ module Lyrebird
       canonical = @signed_info.canonicalize(c14n)
 
       sig_value = @signature.at_xpath("ds:SignatureValue", NS)
-      signature_bytes = Base64.strict_decode64(sig_value.text)
+      signature_bytes = sig_value.text.unpack1("m0")
 
       public_key = @certificate.x509.public_key
       verified = public_key.verify("SHA256", signature_bytes, canonical)

@@ -61,7 +61,7 @@ module Lyrebird
     def populate_signature_value
       canonical = @signed_info.canonicalize(C14N_EXCLUSIVE)
       sig = @certificate.key.sign("SHA256", canonical)
-      @signature_value.content = Base64.strict_encode64(sig)
+      @signature_value.content = [sig].pack("m0")
     end
 
     def build_key_info
@@ -117,7 +117,7 @@ module Lyrebird
     def compute_digest
       canonical = @element.canonicalize(C14N_EXCLUSIVE)
       digest = OpenSSL::Digest::SHA256.digest(canonical)
-      Base64.strict_encode64(digest)
+      [digest].pack("m0")
     end
   end
 end

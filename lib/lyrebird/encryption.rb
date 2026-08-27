@@ -70,7 +70,7 @@ module Lyrebird
 
         cd.add_child(@doc.create_element("CipherValue")).tap do |cv|
           cv.namespace = @xenc
-          cv.content = Base64.strict_encode64(encrypted_aes_key)
+          cv.content = [encrypted_aes_key].pack("m0")
         end
       end
     end
@@ -88,7 +88,7 @@ module Lyrebird
 
         cd.add_child(@doc.create_element("CipherValue")).tap do |cv|
           cv.namespace = @xenc
-          cv.content = Base64.strict_encode64(iv + ciphertext)
+          cv.content = [iv + ciphertext].pack("m0")
         end
       end
     end

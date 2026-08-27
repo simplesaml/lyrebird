@@ -2,7 +2,6 @@ PATH
   remote: .
   specs:
     lyrebird (2.0.0)
-      base64
       nokogiri
       ostruct
 
@@ -51,6 +50,7 @@ PLATFORMS
   x86_64-linux-musl
 
 DEPENDENCIES
+  base64
   logger
   lyrebird!
   minitest

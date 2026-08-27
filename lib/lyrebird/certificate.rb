@@ -58,7 +58,7 @@ module Lyrebird
     end
 
     def base64
-      Base64.strict_encode64(@x509.to_der)
+      [@x509.to_der].pack("m0")
     end
 
     private

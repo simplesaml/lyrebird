@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require "base64"
 require "nokogiri"
 require "openssl"
 require "ostruct"

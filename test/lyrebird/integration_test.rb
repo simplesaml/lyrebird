@@ -214,11 +214,11 @@ module Lyrebird
         end
       end
 
-      doc = Nokogiri::XML(Base64.strict_decode64(response.mimic))
+      doc = Nokogiri::XML(response.mimic.unpack1("m0"))
       xpath = "//saml:Attribute[@Name='email']/saml:AttributeValue"
       email_attr = doc.at_xpath(xpath, { "saml" => SAML_ASSERTION_NS })
       email_attr.content = tampered_email
-      tampered = Base64.strict_encode64(doc.to_xml(save_with: 0))
+      tampered = [doc.to_xml(save_with: 0)].pack("m0")
 
       settings = OneLogin::RubySaml::Settings.new.tap do |s|
         s.idp_cert = @idp_cert.x509_pem
