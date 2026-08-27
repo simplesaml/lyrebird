@@ -161,7 +161,7 @@ module Lyrebird
       signature.remove
       canonical = element.canonicalize(Nokogiri::XML::XML_C14N_EXCLUSIVE_1_0)
 
-      assert_equal expected, OpenSSL::Digest::SHA256.digest(canonical)
+      assert_equal expected, OpenSSL::Digest.new("SHA256").digest(canonical)
     end
 
     def test_sign_keeps_nested_signature
@@ -179,7 +179,7 @@ module Lyrebird
       signature.remove
       c14n = Nokogiri::XML::XML_C14N_EXCLUSIVE_1_0
       canonical = @element.canonicalize(c14n)
-      computed = OpenSSL::Digest::SHA256.digest(canonical)
+      computed = OpenSSL::Digest.new("SHA256").digest(canonical)
 
       digest_value = reference.at_xpath("ds:DigestValue", NS)
       expected = digest_value.text.unpack1("m0")
@@ -194,7 +194,8 @@ module Lyrebird
       signature_bytes = sig_value.text.unpack1("m0")
 
       public_key = @certificate.x509.public_key
-      verified = public_key.verify("SHA256", signature_bytes, canonical)
+      digest = OpenSSL::Digest.new("SHA256")
+      verified = public_key.verify(digest, signature_bytes, canonical)
       assert verified
     end
   end

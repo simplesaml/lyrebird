@@ -353,12 +353,13 @@ module Lyrebird
       key = idp.x509.public_key
       bytes = sv.unpack1("m0")
       canonical = info.canonicalize(c14n)
-      verified = key.verify("SHA256", bytes, canonical)
+      verified = key.verify(OpenSSL::Digest.new("SHA256"), bytes, canonical)
 
       assert verified
 
       signature.remove
-      digest = OpenSSL::Digest::SHA256.digest(assertion.canonicalize(c14n))
+      plain = assertion.canonicalize(c14n)
+      digest = OpenSSL::Digest.new("SHA256").digest(plain)
       assert_equal expected, [digest].pack("m0")
     end
   end

@@ -79,7 +79,7 @@ module Lyrebird
           c.add_extension(OpenSSL::X509::Extension.new(oid, value, true))
         end
 
-        c.sign(@key, OpenSSL::Digest::SHA256.new)
+        c.sign(@key, OpenSSL::Digest.new("SHA256"))
       end
     end
 
