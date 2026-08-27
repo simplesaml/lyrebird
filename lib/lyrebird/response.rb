@@ -2,17 +2,18 @@
 
 module Lyrebird
   class Response
-    def self.build(**kwargs)
-      config = OpenStruct.new(kwargs)
-
-      config.define_singleton_method(:attributes) do |&block|
+    class Config < Options
+      def attributes(&block)
         current = self[:attributes] || {}
         return current unless block
 
-        fresh = OpenStruct.new.tap(&block).to_h
+        fresh = Options.new.tap(&block).to_h
         self[:attributes] = current.transform_keys(&:to_sym).merge(fresh)
       end
+    end
 
+    def self.build(**kwargs)
+      config = Config.new(kwargs)
       yield config if block_given?
       new(**config.to_h)
     end

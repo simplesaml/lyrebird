@@ -2,7 +2,6 @@
 
 require "nokogiri"
 require "openssl"
-require "ostruct"
 require "securerandom"
 require "time"
 
@@ -12,6 +11,7 @@ require_relative "lyrebird/defaults"
 require_relative "lyrebird/encryption"
 require_relative "lyrebird/id"
 require_relative "lyrebird/namespaces"
+require_relative "lyrebird/options"
 require_relative "lyrebird/response"
 require_relative "lyrebird/signature"
 require_relative "lyrebird/version"

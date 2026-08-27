@@ -16,7 +16,7 @@ module Lyrebird
     end
 
     def self.build(**kwargs)
-      config = OpenStruct.new(kwargs)
+      config = Options.new(kwargs)
       yield config if block_given?
       new(**config.to_h)
     end

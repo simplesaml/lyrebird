@@ -139,6 +139,12 @@ module Lyrebird
       assert_equal DEFAULTS.attributes.keys.map(&:to_s), names
     end
 
+    def test_misspelled_block_option_raises
+      assert_raises(NoMethodError) do
+        Response.build { |r| r.attribute { |a| a.email = "a@b.c" } }
+      end
+    end
+
     def test_build_with_attributes_hash
       email = "user@example.com"
 
