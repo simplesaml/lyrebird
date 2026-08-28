@@ -22,7 +22,7 @@ Gem::Specification.new do |spec|
 
   spec.require_paths = ["lib"]
 
-  spec.add_dependency "nokogiri"
+  spec.add_dependency "nokogiri", ">= 1.14"
 
   # ruby-saml requires base64 and logger without declaring either, and neither
   # is a default gem as of Ruby 3.4.

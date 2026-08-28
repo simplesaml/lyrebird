@@ -2,7 +2,7 @@ PATH
   remote: .
   specs:
     lyrebird (2.0.0)
-      nokogiri
+      nokogiri (>= 1.14)
 
 GEM
   remote: https://rubygems.org/
