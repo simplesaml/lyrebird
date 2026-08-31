@@ -10,18 +10,14 @@ module Lyrebird
     end
 
     def encrypt
-      build_encrypted_assertion
-    end
-
-    private
-
-    def build_encrypted_assertion
       @doc.create_element("EncryptedAssertion").tap do |ea|
         @saml = ea.add_namespace_definition("saml", SAML_ASSERTION_NS)
         ea.namespace = @saml
         ea.add_child(build_encrypted_data)
       end
     end
+
+    private
 
     def build_encrypted_data
       @doc.create_element("EncryptedData").tap do |ed|

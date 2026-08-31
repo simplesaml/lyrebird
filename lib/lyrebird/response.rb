@@ -92,7 +92,7 @@ module Lyrebird
 
     def sign_assertion(doc)
       ns = { "saml" => SAML_ASSERTION_NS }
-      assertion = doc.at_xpath("//saml:Assertion", ns)
+      assertion = doc.root.at_xpath("saml:Assertion", ns)
       Signature.new(assertion, @sign_with).sign!
     end
 

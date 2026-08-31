@@ -13,9 +13,10 @@ module Lyrebird
     def sign!
       ns = { "saml" => SAML_ASSERTION_NS, "ds" => XMLDSIG_NS }
       @element.at_xpath("ds:Signature", ns)&.remove
+      signature = build_signature
       issuer = @element.at_xpath("saml:Issuer", ns)
-      issuer.add_next_sibling(build_signature)
-      populate_signature_value
+      issuer.add_next_sibling(signature)
+      populate_signature_value(signature)
       self
     end
 
@@ -34,7 +35,6 @@ module Lyrebird
 
     def build_signed_info
       @doc.create_element("SignedInfo").tap do |si|
-        @signed_info = si
         si.namespace = @ds
 
         si.add_child(@doc.create_element("CanonicalizationMethod")).tap do |cm|
@@ -54,14 +54,16 @@ module Lyrebird
     def build_signature_value
       @doc.create_element("SignatureValue").tap do |sv|
         sv.namespace = @ds
-        @signature_value = sv
       end
     end
 
-    def populate_signature_value
-      canonical = @signed_info.canonicalize(C14N_EXCLUSIVE)
+    def populate_signature_value(signature)
+      ns = { "ds" => XMLDSIG_NS }
+      signed_info = signature.at_xpath("ds:SignedInfo", ns)
+      canonical = signed_info.canonicalize(C14N_EXCLUSIVE)
       sig = @certificate.key.sign(OpenSSL::Digest.new("SHA256"), canonical)
-      @signature_value.content = [sig].pack("m0")
+      value = signature.at_xpath("ds:SignatureValue", ns)
+      value.content = [sig].pack("m0")
     end
 
     def build_key_info

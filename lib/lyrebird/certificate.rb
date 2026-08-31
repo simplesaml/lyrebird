@@ -9,6 +9,8 @@ module Lyrebird
       "keyUsage" => "digitalSignature,keyEncipherment"
     }.freeze
 
+    private_constant :LOCK, :EXTENSIONS
+
     attr_reader :key, :x509
 
     def self.default
