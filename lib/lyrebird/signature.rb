@@ -7,7 +7,6 @@ module Lyrebird
     def initialize(element, certificate)
       @element = element
       @certificate = certificate
-      @doc = element.document
     end
 
     def sign!
@@ -23,38 +22,47 @@ module Lyrebird
     private
 
     def build_signature
-      @doc.create_element("Signature").tap do |sig|
-        @ds = sig.add_namespace_definition("ds", XMLDSIG_NS)
-        sig.namespace = @ds
+      Nokogiri::XML::Builder.new do |xml|
+        xml["ds"].Signature("xmlns:ds" => XMLDSIG_NS) do
+          signed_info(xml)
+          xml["ds"].SignatureValue
+          key_info(xml)
+        end
+      end.doc.root
+    end
 
-        sig.add_child(build_signed_info)
-        sig.add_child(build_signature_value)
-        sig.add_child(build_key_info)
+    def signed_info(xml)
+      xml["ds"].SignedInfo do
+        xml["ds"].CanonicalizationMethod(Algorithm: EXC_C14N)
+        xml["ds"].SignatureMethod(Algorithm: RSA_SHA256)
+        reference(xml)
       end
     end
 
-    def build_signed_info
-      @doc.create_element("SignedInfo").tap do |si|
-        si.namespace = @ds
-
-        si.add_child(@doc.create_element("CanonicalizationMethod")).tap do |cm|
-          cm.namespace = @ds
-          cm["Algorithm"] = EXC_C14N
+    def reference(xml)
+      xml["ds"].Reference(URI: "##{@element["ID"]}") do
+        xml["ds"].Transforms do
+          xml["ds"].Transform(Algorithm: ENVELOPED_SIG)
+          xml["ds"].Transform(Algorithm: EXC_C14N)
         end
 
-        si.add_child(@doc.create_element("SignatureMethod")).tap do |sm|
-          sm.namespace = @ds
-          sm["Algorithm"] = RSA_SHA256
-        end
-
-        si.add_child(build_reference)
+        xml["ds"].DigestMethod(Algorithm: SHA256_DIGEST)
+        xml["ds"].DigestValue(compute_digest)
       end
     end
 
-    def build_signature_value
-      @doc.create_element("SignatureValue").tap do |sv|
-        sv.namespace = @ds
+    def key_info(xml)
+      xml["ds"].KeyInfo do
+        xml["ds"].X509Data do
+          xml["ds"].X509Certificate(@certificate.base64)
+        end
       end
+    end
+
+    def compute_digest
+      canonical = @element.canonicalize(C14N_EXCLUSIVE)
+      digest = OpenSSL::Digest.new("SHA256").digest(canonical)
+      [digest].pack("m0")
     end
 
     def populate_signature_value(signature)
@@ -64,62 +72,6 @@ module Lyrebird
       sig = @certificate.key.sign(OpenSSL::Digest.new("SHA256"), canonical)
       value = signature.at_xpath("ds:SignatureValue", ns)
       value.content = [sig].pack("m0")
-    end
-
-    def build_key_info
-      @doc.create_element("KeyInfo").tap do |ki|
-        ki.namespace = @ds
-
-        ki.add_child(@doc.create_element("X509Data")).tap do |xd|
-          xd.namespace = @ds
-
-          xd.add_child(@doc.create_element("X509Certificate")).tap do |xc|
-            xc.namespace = @ds
-            xc.content = @certificate.base64
-          end
-        end
-      end
-    end
-
-    def build_reference
-      @doc.create_element("Reference").tap do |ref|
-        ref.namespace = @ds
-        ref["URI"] = "##{@element["ID"]}"
-
-        ref.add_child(build_transforms)
-
-        ref.add_child(@doc.create_element("DigestMethod")).tap do |dm|
-          dm.namespace = @ds
-          dm["Algorithm"] = SHA256_DIGEST
-        end
-
-        ref.add_child(@doc.create_element("DigestValue")).tap do |dv|
-          dv.namespace = @ds
-          dv.content = compute_digest
-        end
-      end
-    end
-
-    def build_transforms
-      @doc.create_element("Transforms").tap do |t|
-        t.namespace = @ds
-
-        t.add_child(@doc.create_element("Transform")).tap do |tr|
-          tr.namespace = @ds
-          tr["Algorithm"] = ENVELOPED_SIG
-        end
-
-        t.add_child(@doc.create_element("Transform")).tap do |tr|
-          tr.namespace = @ds
-          tr["Algorithm"] = EXC_C14N
-        end
-      end
-    end
-
-    def compute_digest
-      canonical = @element.canonicalize(C14N_EXCLUSIVE)
-      digest = OpenSSL::Digest.new("SHA256").digest(canonical)
-      [digest].pack("m0")
     end
   end
 end

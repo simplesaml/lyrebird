@@ -48,33 +48,34 @@ module Lyrebird
     end
 
     def document
-      @document ||= Nokogiri::XML::Document.new.tap do |doc|
-        doc.root = build_response(doc)
+      @document ||= build_response.doc.tap do |doc|
         Signature.new(doc.root, @sign_with).sign! if @sign_with
       end
     end
 
     private
 
-    def build_response(doc)
-      doc.create_element("Response").tap do |r|
-        @samlp = r.add_namespace_definition("samlp", SAML_PROTOCOL_NS)
-        @saml = r.add_namespace_definition("saml", SAML_ASSERTION_NS)
+    def build_response
+      attrs = {
+        "xmlns:samlp" => SAML_PROTOCOL_NS,
+        "xmlns:saml" => SAML_ASSERTION_NS,
+        ID: ID.generate,
+        Version: "2.0",
+        IssueInstant: Time.now.utc.iso8601,
+        Destination: @destination,
+        InResponseTo: @in_response_to
+      }.compact
 
-        r.namespace = @samlp
-        r["ID"] = ID.generate
-        r["Version"] = "2.0"
-        r["IssueInstant"] = Time.now.utc.iso8601
-        r["Destination"] = @destination if @destination
-        r["InResponseTo"] = @in_response_to if @in_response_to
+      Nokogiri::XML::Builder.new do |xml|
+        xml["samlp"].Response(attrs) do
+          xml["saml"].Issuer(@issuer.to_s)
 
-        r.add_child(doc.create_element("Issuer")).tap do |i|
-          i.namespace = @saml
-          i.content = @issuer
+          xml["samlp"].Status do
+            xml["samlp"].StatusCode(Value: STATUS_SUCCESS)
+          end
+
+          xml.parent << build_assertion_element
         end
-
-        r.add_child(build_status(doc))
-        r.add_child(build_assertion_element)
       end
     end
 
@@ -83,17 +84,6 @@ module Lyrebird
       Signature.new(element, @sign_with).sign! if @sign_with
       element = Encryption.new(element, @encrypt_with).encrypt if @encrypt_with
       element
-    end
-
-    def build_status(doc)
-      doc.create_element("Status").tap do |s|
-        s.namespace = @samlp
-
-        s.add_child(doc.create_element("StatusCode")).tap do |sc|
-          sc.namespace = @samlp
-          sc["Value"] = STATUS_SUCCESS
-        end
-      end
     end
   end
 end

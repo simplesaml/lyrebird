@@ -139,6 +139,11 @@ module Lyrebird
       assert_nil confirmation_data(assertion)["InResponseTo"]
     end
 
+    def test_recipient_omitted_when_nil
+      assertion = Assertion.new(recipient: nil).document
+      assert_nil confirmation_data(assertion)["Recipient"]
+    end
+
     def test_valid_for_override
       valid_for = 600 # 10 minutes
       refute_equal valid_for, DEFAULTS.valid_for

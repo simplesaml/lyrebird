@@ -5,88 +5,60 @@ module Lyrebird
     def initialize(element, certificate)
       @element = element
       @certificate = certificate
-      @doc = element.document
       @aes_key = SecureRandom.random_bytes(32)
     end
 
     def encrypt
-      @doc.create_element("EncryptedAssertion").tap do |ea|
-        @saml = ea.add_namespace_definition("saml", SAML_ASSERTION_NS)
-        ea.namespace = @saml
-        ea.add_child(build_encrypted_data)
-      end
+      Nokogiri::XML::Builder.new do |xml|
+        xml["saml"].EncryptedAssertion("xmlns:saml" => SAML_ASSERTION_NS) do
+          encrypted_data(xml)
+        end
+      end.doc.root
     end
 
     private
 
-    def build_encrypted_data
-      @doc.create_element("EncryptedData").tap do |ed|
-        @xenc = ed.add_namespace_definition("xenc", XMLENC_NS)
-        ed.namespace = @xenc
-        ed["Type"] = "#{XMLENC_NS}Element"
+    def encrypted_data(xml)
+      attrs = {
+        "xmlns:xenc" => XMLENC_NS,
+        Type: "#{XMLENC_NS}Element"
+      }
 
-        ed.add_child(@doc.create_element("EncryptionMethod")).tap do |em|
-          em.namespace = @xenc
-          em["Algorithm"] = AES256_CBC
+      xml["xenc"].EncryptedData(attrs) do
+        xml["xenc"].EncryptionMethod(Algorithm: AES256_CBC)
+        key_info(xml)
+        cipher_data(xml, ciphertext)
+      end
+    end
+
+    def key_info(xml)
+      xml["ds"].KeyInfo("xmlns:ds" => XMLDSIG_NS) do
+        xml["xenc"].EncryptedKey do
+          xml["xenc"].EncryptionMethod(Algorithm: RSA_OAEP)
+          cipher_data(xml, wrapped_key)
         end
-
-        ed.add_child(build_key_info)
-        ed.add_child(build_cipher_data)
       end
     end
 
-    def build_key_info
-      @doc.create_element("KeyInfo").tap do |ki|
-        @ds = ki.add_namespace_definition("ds", XMLDSIG_NS)
-        ki.namespace = @ds
-        ki.add_child(build_encrypted_key)
+    def cipher_data(xml, value)
+      xml["xenc"].CipherData do
+        xml["xenc"].CipherValue(value)
       end
     end
 
-    def build_encrypted_key
-      @doc.create_element("EncryptedKey").tap do |ek|
-        ek.namespace = @xenc
-
-        ek.add_child(@doc.create_element("EncryptionMethod")).tap do |em|
-          em.namespace = @xenc
-          em["Algorithm"] = RSA_OAEP
-        end
-
-        ek.add_child(build_encrypted_key_cipher_data)
-      end
-    end
-
-    def build_encrypted_key_cipher_data
+    def wrapped_key
       public_key = @certificate.x509.public_key
       padding = OpenSSL::PKey::RSA::PKCS1_OAEP_PADDING
-      encrypted_aes_key = public_key.public_encrypt(@aes_key, padding)
-
-      @doc.create_element("CipherData").tap do |cd|
-        cd.namespace = @xenc
-
-        cd.add_child(@doc.create_element("CipherValue")).tap do |cv|
-          cv.namespace = @xenc
-          cv.content = [encrypted_aes_key].pack("m0")
-        end
-      end
+      [public_key.public_encrypt(@aes_key, padding)].pack("m0")
     end
 
-    def build_cipher_data
+    def ciphertext
       cipher = OpenSSL::Cipher.new("AES-256-CBC")
       cipher.encrypt
       cipher.key = @aes_key
       iv = cipher.random_iv
       plaintext = @element.to_xml(save_with: 0)
-      ciphertext = cipher.update(plaintext) + cipher.final
-
-      @doc.create_element("CipherData").tap do |cd|
-        cd.namespace = @xenc
-
-        cd.add_child(@doc.create_element("CipherValue")).tap do |cv|
-          cv.namespace = @xenc
-          cv.content = [iv + ciphertext].pack("m0")
-        end
-      end
+      [iv + cipher.update(plaintext) + cipher.final].pack("m0")
     end
   end
 end
