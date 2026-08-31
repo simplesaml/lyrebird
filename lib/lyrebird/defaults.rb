@@ -21,9 +21,7 @@ module Lyrebird
       @valid_for = 300 # 5 minutes
       @audience = "https://sp.example.com"
 
-      @authn_context =
-        "urn:oasis:names:tc:SAML:2.0:ac:classes:" \
-        "PasswordProtectedTransport"
+      @authn_context = AUTHN_PASSWORD_PROTECTED_TRANSPORT
 
       @attributes = {
         first_name: "Test",

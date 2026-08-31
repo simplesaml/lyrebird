@@ -32,6 +32,11 @@ module Lyrebird
       assert_equal expected, NAMEID_UNSPECIFIED
     end
 
+    def test_authn_password_protected_transport
+      ppt = "urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport"
+      assert_equal ppt, AUTHN_PASSWORD_PROTECTED_TRANSPORT
+    end
+
     def test_cm_bearer
       assert_equal "urn:oasis:names:tc:SAML:2.0:cm:bearer", CM_BEARER
     end

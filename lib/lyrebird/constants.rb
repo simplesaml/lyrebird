@@ -9,6 +9,9 @@ module Lyrebird
   NAMEID_TRANSIENT = "urn:oasis:names:tc:SAML:2.0:nameid-format:transient"
   NAMEID_UNSPECIFIED = "urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified"
 
+  ppt = "urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport"
+  AUTHN_PASSWORD_PROTECTED_TRANSPORT = ppt
+
   CM_BEARER = "urn:oasis:names:tc:SAML:2.0:cm:bearer"
   ATTR_NAME_FORMAT = "urn:oasis:names:tc:SAML:2.0:attrname-format:unspecified"
   STATUS_SUCCESS = "urn:oasis:names:tc:SAML:2.0:status:Success"
