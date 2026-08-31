@@ -4,6 +4,8 @@ module Lyrebird
   class Signature
     C14N_EXCLUSIVE = Nokogiri::XML::XML_C14N_EXCLUSIVE_1_0
 
+    private_constant :C14N_EXCLUSIVE
+
     def initialize(element, certificate)
       @element = element
       @certificate = certificate
