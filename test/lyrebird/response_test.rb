@@ -302,6 +302,22 @@ module Lyrebird
       refute_nil root.at_xpath("saml:Assertion/ds:Signature", NAMESPACES)
     end
 
+    def test_assertion_digest_verifies_after_embedding
+      response = Response.new(sign_with: Certificate.build)
+      doc = Nokogiri::XML(response.to_xml)
+      assertion = doc.at_xpath("//saml:Assertion", NAMESPACES)
+      signature = assertion.at_xpath("ds:Signature", NAMESPACES)
+      xpath = "ds:SignedInfo/ds:Reference/ds:DigestValue"
+      expected = signature.at_xpath(xpath, NAMESPACES).text
+
+      signature.remove
+      c14n = Nokogiri::XML::XML_C14N_EXCLUSIVE_1_0
+      canonical = assertion.canonicalize(c14n)
+      digest = OpenSSL::Digest.new("SHA256").digest(canonical)
+
+      assert_equal expected, [digest].pack("m0")
+    end
+
     def test_not_encrypted_by_default
       assert_nil @root.at_xpath("saml:EncryptedAssertion", NAMESPACES)
     end
