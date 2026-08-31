@@ -123,37 +123,27 @@ module Lyrebird
       recipient = "https://custom.example.com/acs"
       refute_equal recipient, DEFAULTS.recipient
       assertion = Assertion.new(recipient: recipient).document
-      subject = assertion.root.at_xpath("saml:Subject", NS)
-      sc = subject.at_xpath("saml:SubjectConfirmation", NS)
-      scd = sc.at_xpath("saml:SubjectConfirmationData", NS)
-      assert_equal recipient, scd["Recipient"]
+      assert_equal recipient, confirmation_data(assertion)["Recipient"]
     end
 
     def test_in_response_to_override
       in_response_to = "_custom_request"
       refute_equal in_response_to, DEFAULTS.in_response_to
       assertion = Assertion.new(in_response_to: in_response_to).document
-      subject = assertion.root.at_xpath("saml:Subject", NS)
-      sc = subject.at_xpath("saml:SubjectConfirmation", NS)
-      scd = sc.at_xpath("saml:SubjectConfirmationData", NS)
+      scd = confirmation_data(assertion)
       assert_equal in_response_to, scd["InResponseTo"]
     end
 
     def test_in_response_to_omitted_when_nil
       assertion = Assertion.new(in_response_to: nil).document
-      subject = assertion.root.at_xpath("saml:Subject", NS)
-      sc = subject.at_xpath("saml:SubjectConfirmation", NS)
-      scd = sc.at_xpath("saml:SubjectConfirmationData", NS)
-      assert_nil scd["InResponseTo"]
+      assert_nil confirmation_data(assertion)["InResponseTo"]
     end
 
     def test_valid_for_override
-      valid_for = 600 # 10 minutes
+      valid_for = 600
       refute_equal valid_for, DEFAULTS.valid_for
       assertion = Assertion.new(valid_for: valid_for).document
-      subject = assertion.root.at_xpath("saml:Subject", NS)
-      sc = subject.at_xpath("saml:SubjectConfirmation", NS)
-      scd = sc.at_xpath("saml:SubjectConfirmationData", NS)
+      scd = confirmation_data(assertion)
       not_on_or_after = Time.iso8601(scd["NotOnOrAfter"])
       expected = Time.now.utc + valid_for
       assert_in_delta expected.to_i, not_on_or_after.to_i, 1
@@ -405,6 +395,14 @@ module Lyrebird
       assert_equal 2, group_values.size
       assert_equal "admin", group_values[0].text
       assert_equal "users", group_values[1].text
+    end
+
+    private
+
+    def confirmation_data(assertion)
+      subject = assertion.root.at_xpath("saml:Subject", NS)
+      confirmation = subject.at_xpath("saml:SubjectConfirmation", NS)
+      confirmation.at_xpath("saml:SubjectConfirmationData", NS)
     end
   end
 end

@@ -16,16 +16,7 @@ module Lyrebird
         r.name_id = name_id
       end
 
-      settings = OneLogin::RubySaml::Settings.new.tap do |s|
-        s.idp_cert = @idp_cert.x509_pem
-        s.sp_entity_id = DEFAULTS.audience
-        s.assertion_consumer_service_url = DEFAULTS.recipient
-      end
-
-      saml_response = OneLogin::RubySaml::Response.new(
-        response.mimic,
-        settings: settings
-      )
+      saml_response = consume(response.mimic)
 
       assert saml_response.is_valid?, saml_response.errors
       assert_equal name_id, saml_response.nameid
@@ -49,17 +40,7 @@ module Lyrebird
         end
       end
 
-      settings = OneLogin::RubySaml::Settings.new.tap do |s|
-        s.idp_cert = @idp_cert.x509_pem
-        s.private_key = sp.key_pem
-        s.sp_entity_id = DEFAULTS.audience
-        s.assertion_consumer_service_url = DEFAULTS.recipient
-      end
-
-      saml_response = OneLogin::RubySaml::Response.new(
-        response.mimic,
-        settings: settings
-      )
+      saml_response = consume(response.mimic, sp: sp)
 
       assert saml_response.is_valid?, saml_response.errors
       assert_equal name_id, saml_response.nameid
@@ -81,16 +62,7 @@ module Lyrebird
         end
       end
 
-      settings = OneLogin::RubySaml::Settings.new.tap do |s|
-        s.idp_cert = @idp_cert.x509_pem
-        s.sp_entity_id = DEFAULTS.audience
-        s.assertion_consumer_service_url = DEFAULTS.recipient
-      end
-
-      saml_response = OneLogin::RubySaml::Response.new(
-        response.mimic,
-        settings: settings
-      )
+      saml_response = consume(response.mimic)
 
       assert saml_response.is_valid?, saml_response.errors
       assert_equal name_id, saml_response.nameid
@@ -111,16 +83,7 @@ module Lyrebird
         end
       end
 
-      settings = OneLogin::RubySaml::Settings.new.tap do |s|
-        s.idp_cert = @idp_cert.x509_pem
-        s.sp_entity_id = DEFAULTS.audience
-        s.assertion_consumer_service_url = DEFAULTS.recipient
-      end
-
-      saml_response = OneLogin::RubySaml::Response.new(
-        response.mimic,
-        settings: settings
-      )
+      saml_response = consume(response.mimic)
 
       assert saml_response.is_valid?, saml_response.errors
       assert_equal name_id, saml_response.nameid
@@ -130,86 +93,47 @@ module Lyrebird
 
     def test_ruby_saml_validates_custom_validity_period
       name_id = "user@example.com"
-      not_before = Time.now.utc - 60
-      valid_for = 600
 
       response = Response.build(sign_with: @idp_cert) do |r|
         r.name_id = name_id
-        r.not_before = not_before
-        r.valid_for = valid_for
+        r.not_before = Time.now.utc - 60
+        r.valid_for = 600
       end
 
-      settings = OneLogin::RubySaml::Settings.new.tap do |s|
-        s.idp_cert = @idp_cert.x509_pem
-        s.sp_entity_id = DEFAULTS.audience
-        s.assertion_consumer_service_url = DEFAULTS.recipient
-      end
-
-      saml_response = OneLogin::RubySaml::Response.new(
-        response.mimic,
-        settings: settings
-      )
+      saml_response = consume(response.mimic)
 
       assert saml_response.is_valid?, saml_response.errors
       assert_equal name_id, saml_response.nameid
     end
 
     def test_ruby_saml_rejects_expired_assertion
-      name_id = "user@example.com"
-
       response = Response.build(sign_with: @idp_cert) do |r|
-        r.name_id = name_id
         r.valid_for = -10
       end
 
-      settings = OneLogin::RubySaml::Settings.new.tap do |s|
-        s.idp_cert = @idp_cert.x509_pem
-        s.sp_entity_id = DEFAULTS.audience
-        s.assertion_consumer_service_url = DEFAULTS.recipient
-      end
-
-      saml_response = OneLogin::RubySaml::Response.new(
-        response.mimic,
-        settings: settings
-      )
+      saml_response = consume(response.mimic)
 
       assert_operator Time.now.utc, :>=, saml_response.not_on_or_after
       refute saml_response.is_valid?
     end
 
     def test_ruby_saml_rejects_not_yet_valid_assertion
-      name_id = "user@example.com"
-      not_before = Time.now.utc + 600
-
       response = Response.build(sign_with: @idp_cert) do |r|
-        r.name_id = name_id
-        r.not_before = not_before
+        r.not_before = Time.now.utc + 600
       end
 
-      settings = OneLogin::RubySaml::Settings.new.tap do |s|
-        s.idp_cert = @idp_cert.x509_pem
-        s.sp_entity_id = DEFAULTS.audience
-        s.assertion_consumer_service_url = DEFAULTS.recipient
-      end
-
-      saml_response = OneLogin::RubySaml::Response.new(
-        response.mimic,
-        settings: settings
-      )
+      saml_response = consume(response.mimic)
 
       assert_operator Time.now.utc, :<, saml_response.not_before
       refute saml_response.is_valid?
     end
 
     def test_ruby_saml_rejects_tampered_signed_response
-      original_email = "user@example.com"
-      tampered_email = "attacker@evil.com"
-
       response = Response.build(sign_with: @idp_cert) do |r|
         r.name_id = "user@example.com"
 
         r.attributes do |a|
-          a.email = original_email
+          a.email = "user@example.com"
           a.role = "user"
         end
       end
@@ -217,22 +141,28 @@ module Lyrebird
       doc = Nokogiri::XML(response.mimic.unpack1("m0"))
       xpath = "//saml:Attribute[@Name='email']/saml:AttributeValue"
       email_attr = doc.at_xpath(xpath, { "saml" => SAML_ASSERTION_NS })
-      email_attr.content = tampered_email
+      email_attr.content = "attacker@evil.com"
       tampered = [doc.to_xml(save_with: 0)].pack("m0")
 
-      settings = OneLogin::RubySaml::Settings.new.tap do |s|
-        s.idp_cert = @idp_cert.x509_pem
-        s.sp_entity_id = DEFAULTS.audience
-        s.assertion_consumer_service_url = DEFAULTS.recipient
-      end
-
-      saml_response = OneLogin::RubySaml::Response.new(
-        tampered,
-        settings: settings
-      )
+      saml_response = consume(tampered)
 
       refute saml_response.is_valid?
       assert_includes saml_response.errors.join(" "), "Signature"
+    end
+
+    private
+
+    def consume(encoded, sp: nil)
+      OneLogin::RubySaml::Response.new(encoded, settings: settings(sp: sp))
+    end
+
+    def settings(sp: nil)
+      OneLogin::RubySaml::Settings.new.tap do |s|
+        s.idp_cert = @idp_cert.x509_pem
+        s.private_key = sp.key_pem if sp
+        s.sp_entity_id = DEFAULTS.audience
+        s.assertion_consumer_service_url = DEFAULTS.recipient
+      end
     end
   end
 end
