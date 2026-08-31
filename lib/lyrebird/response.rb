@@ -50,8 +50,7 @@ module Lyrebird
     def document
       @document ||= Nokogiri::XML::Document.new.tap do |doc|
         doc.root = build_response(doc)
-        sign_assertion(doc) if @sign_with && !@encrypt_with
-        sign_response(doc) if @sign_with
+        Signature.new(doc.root, @sign_with).sign! if @sign_with
       end
     end
 
@@ -81,23 +80,9 @@ module Lyrebird
 
     def build_assertion_element
       element = @assertion.document.root
-
-      if @encrypt_with
-        Signature.new(element, @sign_with).sign! if @sign_with
-        Encryption.new(element, @encrypt_with).encrypt
-      else
-        element
-      end
-    end
-
-    def sign_assertion(doc)
-      ns = { "saml" => SAML_ASSERTION_NS }
-      assertion = doc.root.at_xpath("saml:Assertion", ns)
-      Signature.new(assertion, @sign_with).sign!
-    end
-
-    def sign_response(doc)
-      Signature.new(doc.root, @sign_with).sign!
+      Signature.new(element, @sign_with).sign! if @sign_with
+      element = Encryption.new(element, @encrypt_with).encrypt if @encrypt_with
+      element
     end
 
     def build_status(doc)
