@@ -297,13 +297,13 @@ module Lyrebird
     end
 
     def test_sign_with_signs_response_and_assertion
-      root = Response.new(sign_with: Certificate.build).document.root
+      root = Response.new(sign_with: Certificate.default).document.root
       refute_nil root.at_xpath("ds:Signature", NAMESPACES)
       refute_nil root.at_xpath("saml:Assertion/ds:Signature", NAMESPACES)
     end
 
     def test_assertion_digest_verifies_after_embedding
-      response = Response.new(sign_with: Certificate.build)
+      response = Response.new(sign_with: Certificate.default)
       doc = Nokogiri::XML(response.to_xml)
       assertion = doc.at_xpath("//saml:Assertion", NAMESPACES)
       signature = assertion.at_xpath("ds:Signature", NAMESPACES)
@@ -323,26 +323,26 @@ module Lyrebird
     end
 
     def test_encrypt_with_creates_encrypted_assertion
-      root = Response.new(encrypt_with: Certificate.build).document.root
+      root = Response.new(encrypt_with: Certificate.default).document.root
       ea = root.at_xpath("saml:EncryptedAssertion", NAMESPACES)
       assert_equal "EncryptedAssertion", ea.name
       assert_equal "saml", ea.namespace.prefix
     end
 
     def test_encrypt_with_removes_plain_assertion
-      root = Response.new(encrypt_with: Certificate.build).document.root
+      root = Response.new(encrypt_with: Certificate.default).document.root
       assert_nil root.at_xpath("saml:Assertion", NAMESPACES)
     end
 
     def test_encrypt_with_contains_encrypted_data
-      root = Response.new(encrypt_with: Certificate.build).document.root
+      root = Response.new(encrypt_with: Certificate.default).document.root
       xpath = "saml:EncryptedAssertion/xenc:EncryptedData"
       ed = root.at_xpath(xpath, NAMESPACES)
       assert_equal "EncryptedData", ed.name
     end
 
     def test_encrypted_assertion_signature_verifies_after_decryption
-      idp = Certificate.build
+      idp = Certificate.default
       sp = Certificate.build
       root = Response.new(sign_with: idp, encrypt_with: sp).document.root
 
