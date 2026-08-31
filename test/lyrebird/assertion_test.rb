@@ -11,7 +11,7 @@ module Lyrebird
       @root = @assertion.root
       @subject = @root.at_xpath("saml:Subject", NS)
       @sc = @subject.at_xpath("saml:SubjectConfirmation", NS)
-      @scd = @sc.at_xpath("saml:SubjectConfirmationData", NS)
+      @scd = confirmation_data(@assertion)
       @conditions = @root.at_xpath("saml:Conditions", NS)
       xpath = "saml:AudienceRestriction"
       @audience_restriction = @conditions.at_xpath(xpath, NS)
@@ -140,7 +140,7 @@ module Lyrebird
     end
 
     def test_valid_for_override
-      valid_for = 600
+      valid_for = 600 # 10 minutes
       refute_equal valid_for, DEFAULTS.valid_for
       assertion = Assertion.new(valid_for: valid_for).document
       scd = confirmation_data(assertion)
