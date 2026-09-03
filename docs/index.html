@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Lyrebird: test SAML in plain Ruby</title>
+    <meta name="description" content="Lyrebird is a Ruby gem that
+      fakes the identity provider, so you can test SAML single sign-on
+      like any other code. Real signatures, no servers, no SAML
+      expertise required.">
+    <meta property="og:title" content="Lyrebird: test SAML in plain Ruby">
+    <meta property="og:description" content="Lyrebird is a Ruby gem
+      that fakes the identity provider, so you can test SAML single
+      sign-on like any other code. Real signatures, no servers, no
+      SAML expertise required.">
+    <meta property="og:url" content="https://simplesaml.github.io/lyrebird/">
+    <meta property="og:image"
+      content="https://opengraph.githubassets.com/1/simplesaml/lyrebird">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="style.css">
+  </head>
+  <body>
+    <header>
+      <div class="wrap">
+        <nav>
+          <a class="brand" href="#">
+            <svg width="26" height="26" viewBox="0 0 26 26"
+              fill="none" aria-hidden="true">
+              <path d="M4 22C4 22 6 10 13 6C17 3.7 22 4 22 4C22 4
+                21.5 9 19 13C17.3 15.3 16.2 16.5 15 17.1L13.9
+                15.3L12.2 18.6C8.5 20.6 4 22 4 22Z"
+                transform="translate(1.5 -1.5)" stroke="#178a5c"
+                stroke-width="2" stroke-linejoin="round"/>
+              <path d="M1.4 25L5.5 20.5C8.5 13.5 14.5 7 23 3"
+                stroke="#178a5c" stroke-width="2"
+                stroke-linecap="round"/>
+            </svg>
+            Lyrebird
+          </a>
+          <div class="links">
+            <a href="#example">Example</a>
+            <a href="#why">Why Lyrebird</a>
+            <a href="https://github.com/simplesaml/lyrebird">GitHub</a>
+            <a href="https://rubygems.org/gems/lyrebird">RubyGems</a>
+          </div>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="wrap">
+          <h1>
+            Your biggest clients sign in with SAML.
+            Test it like <em>everything else</em>.
+          </h1>
+          <p class="lede">
+            SAML is how enterprises sign in to your app through Okta,
+            Microsoft, or Google. Lyrebird mimics the identity
+            provider in your tests: it builds the signed responses
+            one would send, in a few lines of Ruby. You don&rsquo;t
+            need to know much SAML to use it.
+          </p>
+          <div class="install" tabindex="0">
+            <span class="prompt">Gemfile&nbsp;›</span>
+            <span>
+              gem <span class="str">"lyrebird"</span>, group:
+              <span class="sym">:test</span>
+            </span>
+          </div>
+          <div class="cta">
+            <a href="https://github.com/simplesaml/lyrebird#basic-example"
+              class="btn btn-primary">Get started</a>
+            <a href="https://github.com/simplesaml/lyrebird"
+              class="btn btn-ghost">View source</a>
+          </div>
+          <p class="badges">
+            <img height="20" alt="Gem version"
+              src="https://img.shields.io/gem/v/lyrebird?color=12744d
+&amp;labelColor=1c2822">
+            <img height="20" alt="Gem downloads"
+              src="https://img.shields.io/gem/dt/lyrebird?color=12744d
+&amp;labelColor=1c2822">
+          </p>
+        </div>
+      </section>
+
+      <section class="section" id="example">
+        <div class="wrap">
+          <h2>It&rsquo;s just an integration test</h2>
+          <p class="sub">
+            Build a response, post it to your endpoint, and check
+            what happened. Nothing is mocked, and the endpoint is
+            whatever your app already has: ruby-saml, omniauth-saml,
+            Devise, or your own code. Lyrebird&rsquo;s own
+            <a href="https://github.com/simplesaml/lyrebird/tree/main/test"
+              title="Integration tests against ruby-saml">tests</a>
+            run every response through ruby-saml, rejection paths
+            included.
+          </p>
+          <div class="codeblock">
+            <div class="bar">
+              <span class="dot"></span>
+              <span class="dot"></span>
+              <span class="dot"></span>
+              <span>test/integration/saml_test.rb</span>
+            </div>
+            <pre tabindex="0">
+<code><b>class</b> <i>SAMLTest</i> &lt; <i>ActionDispatch::IntegrationTest</i>
+  test <em>"consume creates a session"</em> <b>do</b>
+    user = users(<u>:alice</u>)
+
+    response = <i>Lyrebird::Response</i>.build <b>do</b> |r|
+      r.issuer      = <em>"https://idp.example.com"</em>
+      r.destination = saml_consume_url
+      r.recipient   = saml_consume_url
+      r.audience    = root_url
+      r.name_id     = user.email
+      r.sign_with   = <i>Lyrebird::Certificate</i>.default
+
+      r.attributes <b>do</b> |a|
+        a.email      = user.email
+        a.first_name = user.first_name
+        a.last_name  = user.last_name
+      <b>end</b>
+    <b>end</b>
+
+    post saml_consume_path, params: { <u>SAMLResponse:</u> response.mimic }
+
+    assert_redirected_to dashboard_path
+    assert_equal user.id, session[<u>:user_id</u>]
+  <b>end</b>
+<b>end</b></code></pre>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="why">
+        <div class="wrap">
+          <h2>Why fake the identity provider?</h2>
+          <p class="sub">
+            Stubs skip your verification code, and static fixtures
+            expire. Running a real identity provider is complex and
+            adds overhead.
+          </p>
+          <div class="grid">
+            <div class="card">
+              <h3>Test the real thing</h3>
+              <p>
+                Responses are signed with a real certificate, so your
+                app verifies them the same way it verifies production
+                ones. Nothing is stubbed out.
+              </p>
+            </div>
+            <div class="card">
+              <h3>No servers to run</h3>
+              <p>
+                Lyrebird is plain Ruby running in your test process.
+                There&rsquo;s no container to boot and no network
+                involved, so the tests are fast and work anywhere.
+              </p>
+            </div>
+            <div class="card">
+              <h3>Nothing goes stale</h3>
+              <p>
+                A SAML response is only valid for a few minutes, so a
+                static fixture is already expired by your next test
+                run. Lyrebird builds a fresh one every time.
+              </p>
+            </div>
+            <div class="card">
+              <h3>Test what you turn away</h3>
+              <p>
+                Lyrebird also builds responses your app should
+                reject: expired, wrong audience, or signed by a
+                certificate it doesn&rsquo;t trust.
+              </p>
+            </div>
+            <div class="card">
+              <h3>Works out of the box</h3>
+              <p>
+                <code>Lyrebird::Response.build</code> with no
+                arguments is a valid response. Certificates are
+                generated for you and reused. Override the defaults
+                once in <code>test_helper.rb</code> if you need to.
+              </p>
+            </div>
+            <div class="card">
+              <h3>Easy to live with</h3>
+              <p>
+                The only dependency is Nokogiri, and the gem stays in
+                your <code>:test</code> group. It works with Minitest,
+                RSpec, or any other framework.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="wrap">
+          <div class="bird">
+            <svg width="72" height="72" viewBox="0 0 26 26"
+              fill="none" aria-hidden="true">
+              <path d="M4 22C4 22 6 10 13 6C17 3.7 22 4 22 4C22 4
+                21.5 9 19 13C17.3 15.3 16.2 16.5 15 17.1L13.9
+                15.3L12.2 18.6C8.5 20.6 4 22 4 22Z"
+                transform="translate(1.5 -1.5)" stroke="#178a5c"
+                stroke-width="1.4" stroke-linejoin="round"/>
+              <path d="M1.4 25L5.5 20.5C8.5 13.5 14.5 7 23 3"
+                stroke="#178a5c" stroke-width="1.4"
+                stroke-linecap="round"/>
+            </svg>
+            <div>
+              <p>
+                <strong>Why the name?</strong> The lyrebird copies any
+                sound it hears, from other birds to camera shutters,
+                well enough to fool anyone listening.
+              </p>
+              <p>
+                This gem does the same to your app. Its responses pass
+                for a real identity provider&rsquo;s, so single
+                sign-on can be tested like any other feature.
+              </p>
+              <p>
+                Lyrebird is built by the team at
+                <a href="https://simplesaml.com">Simple SAML</a>.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="wrap">
+        <span class="byline">
+          Built by <a href="https://simplesaml.com">Simple SAML</a>.
+          Requires Ruby 3.2+.
+        </span>
+        <a href="https://github.com/simplesaml/lyrebird">GitHub</a>
+        <a href="https://rubygems.org/gems/lyrebird">RubyGems</a>
+        <a href="https://github.com/simplesaml/lyrebird/releases">Releases</a>
+        <a href="https://github.com/simplesaml/lyrebird/issues">Issues</a>
+        <a href="https://github.com/simplesaml/lyrebird/blob/main/LICENSE.md"
+          rel="license">License</a>
+      </div>
+    </footer>
+  </body>
+</html>
