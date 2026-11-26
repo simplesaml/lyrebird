@@ -30,6 +30,6 @@ jobs:
       - name: Build gem
         run: gem build lyrebird.gemspec
       - name: Configure RubyGems credentials
-        uses: rubygems/configure-rubygems-credentials@v2.1.0
+        uses: rubygems/configure-rubygems-credentials@v2.2.0
       - name: Publish to RubyGems
         run: gem push "lyrebird-$VERSION.gem"
